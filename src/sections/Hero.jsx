@@ -20,8 +20,7 @@ const isIndiaFeature = (p) => {
   const country = (p?.country || "").toLowerCase();
   const state = (p?.state || "").toLowerCase();
   return (
-    country === "india" ||
-    IN_STATES.some((s) => s.toLowerCase() === state)
+    country === "india" || IN_STATES.some((s) => s.toLowerCase() === state)
   );
 };
 function normalizeIndiaLabel(p) {
@@ -110,8 +109,10 @@ export default function Hero({ onSearch = () => {} }) {
   const [tripType, setTripType] = useState("oneway");
   const [videoReady, setVideoReady] = useState(false);
 
-  const todayISO = getTodayISO();
-  const defaultTime = getDefaultTime();
+  const todayISO = new Date().toISOString().split("T")[0];
+  const defaultTime = new Date(Date.now() + 3600000)
+    .toTimeString()
+    .slice(0, 5);
 
   // form state
   const [localPickup, setLocalPickup] = useState("");
@@ -378,7 +379,10 @@ export default function Hero({ onSearch = () => {} }) {
         setFromOpen(false);
       if (toListRef.current && !toListRef.current.contains(e.target))
         setToOpen(false);
-      if (airportListRef.current && !airportListRef.current.contains(e.target))
+      if (
+        airportListRef.current &&
+        !airportListRef.current.contains(e.target)
+      )
         setAirportOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -443,11 +447,8 @@ export default function Hero({ onSearch = () => {} }) {
   const handleTripTypeChange = (type) => {
     setTripType(type);
     if (type === "oneway") {
-      // one way pe aate hi return date/time ko current kar do
-      const t = getTodayISO();
-      const tm = getDefaultTime();
-      setOutReturnDate(t);
-      setOutReturnTime(tm);
+      setOutReturnDate(todayISO);
+      setOutReturnTime(defaultTime);
     }
   };
 
@@ -461,17 +462,9 @@ export default function Hero({ onSearch = () => {} }) {
         return;
       }
       const pkgHours =
-        localPackage === "12x120"
-          ? 12
-          : localPackage === "8x80"
-          ? 8
-          : 24;
+        localPackage === "12x120" ? 12 : localPackage === "8x80" ? 8 : 24;
       const pkgKm =
-        localPackage === "12x120"
-          ? 120
-          : localPackage === "8x80"
-          ? 80
-          : 250;
+        localPackage === "12x120" ? 120 : localPackage === "8x80" ? 80 : 250;
       payload = {
         service: "local",
         pickup: selectedLocalPlace || { label: localPickup },
@@ -526,8 +519,8 @@ export default function Hero({ onSearch = () => {} }) {
   /* ================= UI ================= */
 
   return (
-    <section className="relative w-full min-h-[700px] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
-      {/* background video – as is */}
+    <section className="relative w-full min-h-[720px] sm:min-h-[90vh] flex items-center justify-center overflow-hidden bg-black">
+      {/* background video */}
       <video
         className={absolute inset-0 w-full h-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${videoReady ? "opacity-100" : "opacity-0"}}
         autoPlay
@@ -542,147 +535,156 @@ export default function Hero({ onSearch = () => {} }) {
       </video>
 
       {/* dark overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90 z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/80 to-black/95 z-10 pointer-events-none" />
 
-      {/* centred content (phone-style card) */}
+      {/* center PHONE style card */}
       <div className="relative z-20 w-full flex justify-center px-3 sm:px-4">
-        <div className="w-full max-w-[420px] sm:max-w-[480px] md:max-w-4xl mx-auto text-white">
-          <div className="mb-4 text-left md:text-center">
-            <p className="text-xs sm:text-sm text-emerald-200/90 uppercase tracking-[0.18em]">
-              Professional Car Booking
-            </p>
-            <h2 className="mt-1 text-2xl sm:text-3xl font-semibold">
-              Local, Outstation &amp; Airport Cabs
-            </h2>
-          </div>
-
-          <div className="bg-gradient-to-tr from-emerald-400/70 via-transparent to-green-500/70 p-[1.5px] rounded-[32px] shadow-[0_0_45px_rgba(16,185,129,0.6)]">
-            <div className="bg-black/35 backdrop-blur-2xl rounded-[30px] border border-white/15 px-4 py-5 sm:px-6 sm:py-7 md:px-8 md:py-8">
-              {/* service tabs */}
-              <div className="flex items-center justify-between gap-2 mb-5 overflow-x-auto">
-                <button
-                  type="button"
-                  onClick={() => handleServiceChange("local")}
-                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all border ${
-                    service === "local"
-                      ? "bg-emerald-500 border-emerald-300 text-white shadow-md shadow-emerald-500/40"
-                      : "bg-white/5 border-white/15 text-white/80 hover:bg-white/15"
-                  }`}
-                >
-                  🏙 Local Rentals
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleServiceChange("outstation")}
-                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all border ${
-                    service === "outstation"
-                      ? "bg-emerald-500 border-emerald-300 text-white shadow-md shadow-emerald-500/40"
-                      : "bg-white/5 border-white/15 text-white/80 hover:bg-white/15"
-                  }`}
-                >
-                  🚗 Outstation
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleServiceChange("airport")}
-                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all border ${
-                    service === "airport"
-                      ? "bg-emerald-500 border-emerald-300 text-white shadow-md shadow-emerald-500/40"
-                      : "bg-white/5 border-white/15 text-white/80 hover:bg-white/15"
-                  }`}
-                >
-                  ✈ Airport
-                </button>
-              </div>
-
-              {/* sub heading + mode toggles */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-                <h3 className="font-semibold text-lg md:text-xl">
+        <div className="relative w-full max-w-[460px] mx-auto">
+          {/* glowing border */}
+          <div className="pointer-events-none absolute -inset-[2px] rounded-[40px] bg-gradient-to-b from-cyan-400/90 via-white/40 to-pink-500/90 opacity-80 blur-[1.5px]" />
+          <div className="relative rounded-[38px] bg-white/5 border border-white/20 backdrop-blur-2xl shadow-[0_30px_80px_rgba(0,0,0,0.9)] px-5 py-6 sm:px-7 sm:py-8 text-white">
+            {/* header */}
+            <div className="mb-5">
+              <h3 className="text-[13px] uppercase tracking-[0.18em] text-white/70">
+                Professional Car Booking
+              </h3>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-400/20 border border-cyan-300/60 shadow-[0_0_18px_rgba(34,211,238,0.8)] text-2xl">
+                  🚖
+                </div>
+                <p className="text-2xl sm:text-[26px] font-semibold">
                   {service === "local"
                     ? "Local City Rentals"
                     : service === "outstation"
                     ? "Outstation Cab Booking"
                     : "Airport Transfer"}
-                </h3>
-
-                <div className="flex flex-wrap justify-start md:justify-end gap-2 text-xs sm:text-sm">
-                  {service === "outstation" && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleTripTypeChange("oneway")}
-                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
-                          tripType === "oneway"
-                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
-                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
-                        }`}
-                      >
-                        🚗 One Way
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleTripTypeChange("roundtrip")}
-                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
-                          tripType === "roundtrip"
-                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
-                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
-                        }`}
-                      >
-                        🔄 Round Trip
-                      </button>
-                    </>
-                  )}
-
-                  {service === "airport" && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAirportMode("drop");
-                          setSelectedAirportItem(null);
-                          setAirportText("");
-                          setToVal("");
-                          setSelectedToPlace(null);
-                        }}
-                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
-                          airportMode === "drop"
-                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
-                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
-                        }`}
-                      >
-                        🚗 Drop to Airport
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAirportMode("pickup");
-                          setSelectedAirportItem(null);
-                          setAirportText("");
-                          setLocalPickup("");
-                          setSelectedLocalPlace(null);
-                        }}
-                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
-                          airportMode === "pickup"
-                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
-                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
-                        }`}
-                      >
-                        🛬 Pickup from Airport
-                      </button>
-                    </>
-                  )}
-                </div>
+                </p>
               </div>
+            </div>
 
-              {/* ---------- FORM ---------- */}
-              <form onSubmit={handleSubmit} className="text-left space-y-4">
-                {/* Local */}
-                {service === "local" && (
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="relative" ref={pickupListRef}>
-                      <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                        📍 Pickup Location (India only)
-                      </label>
+            {/* service tabs */}
+            <div className="mb-5 flex items-center justify-between gap-2 text-[13px]">
+              <button
+                type="button"
+                onClick={() => handleServiceChange("local")}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border transition-all ${
+                  service === "local"
+                    ? "bg-cyan-400 text-slate-900 border-cyan-200 shadow-[0_8px_24px_rgba(34,211,238,0.8)]"
+                    : "bg-white/5 border-white/25 text-white/80 hover:bg-white/10"
+                }`}
+              >
+                <span>🏙</span>
+                <span className="truncate">Local Rentals</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleServiceChange("outstation")}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border transition-all ${
+                  service === "outstation"
+                    ? "bg-cyan-400 text-slate-900 border-cyan-200 shadow-[0_8px_24px_rgba(34,211,238,0.8)]"
+                    : "bg-white/5 border-white/25 text-white/80 hover:bg-white/10"
+                }`}
+              >
+                <span>🚗</span>
+                <span className="truncate">Outstation</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleServiceChange("airport")}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border transition-all ${
+                  service === "airport"
+                    ? "bg-cyan-400 text-slate-900 border-cyan-200 shadow-[0_8px_24px_rgba(34,211,238,0.8)]"
+                    : "bg-white/5 border-white/25 text-white/80 hover:bg-white/10"
+                }`}
+              >
+                <span>✈</span>
+                <span className="truncate">Airport Transfer</span>
+              </button>
+            </div>
+
+            {/* small toggles row */}
+            <div className="mb-4 flex flex-wrap justify-between items-center gap-3 text-[12px]">
+              {service === "outstation" && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleTripTypeChange("oneway")}
+                    className={`px-3 py-1.5 rounded-full border transition ${
+                      tripType === "oneway"
+                        ? "bg-white text-slate-900 border-white shadow-md"
+                        : "bg-white/5 text-white/80 border-white/25 hover:bg-white/10"
+                    }`}
+                  >
+                    🚗 One Way
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTripTypeChange("roundtrip")}
+                    className={`px-3 py-1.5 rounded-full border transition ${
+                      tripType === "roundtrip"
+                        ? "bg-white text-slate-900 border-white shadow-md"
+                        : "bg-white/5 text-white/80 border-white/25 hover:bg-white/10"
+                    }`}
+                  >
+                    🔄 Round Trip
+                  </button>
+                </div>
+              )}
+
+              {service === "airport" && (
+                <div className="flex gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAirportMode("drop");
+                      setSelectedAirportItem(null);
+                      setAirportText("");
+                      setToVal("");
+                      setSelectedToPlace(null);
+                    }}
+                    className={`px-3 py-1.5 rounded-full border transition ${
+                      airportMode === "drop"
+                        ? "bg-white text-slate-900 border-white shadow-md"
+                        : "bg-white/5 text-white/80 border-white/25 hover:bg-white/10"
+                    }`}
+                  >
+                    🚗 Drop to Airport
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAirportMode("pickup");
+                      setSelectedAirportItem(null);
+                      setAirportText("");
+                      setLocalPickup("");
+                      setSelectedLocalPlace(null);
+                    }}
+                    className={`px-3 py-1.5 rounded-full border transition ${
+                      airportMode === "pickup"
+                        ? "bg-white text-slate-900 border-white shadow-md"
+                        : "bg-white/5 text-white/80 border-white/25 hover:bg-white/10"
+                    }`}
+                  >
+                    🛬 Pickup from Airport
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* ================= FORM ================= */}
+            <form onSubmit={handleSubmit} className="space-y-3 text-[13px]">
+              {/* Local */}
+              {service === "local" && (
+                <>
+                  {/* pickup */}
+                  <div className="relative" ref={pickupListRef}>
+                    <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                        📍
+                      </span>
+                      <span>Pickup Location (India only)</span>
+                    </label>
+                    <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                       <input
                         ref={pickupInputRef}
                         type="text"
@@ -691,90 +693,113 @@ export default function Hero({ onSearch = () => {} }) {
                           setSelectedLocalPlace(null);
                           setLocalPickup(e.target.value);
                         }}
-                        placeholder="Colaba, Bandra, Andheri..."
-                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                        placeholder="City, locality, hotel, office..."
+                        className="w-full bg-transparent text-[13px] placeholder:text-white/45 outline-none"
                       />
-                      {pickupOpen && pickupSug.length > 0 && (
-                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                          {pickupSug.map((sug) => (
-                            <li
-                              key={sug.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                pickLocal(sug);
-                              }}
-                              className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                            >
-                              <span className="text-xl flex-shrink-0">
-                                {getPlaceIcon(sug.label)}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-gray-800 font-medium truncate">
-                                  {sug.name || sug.label}
-                                </div>
-                                <div className="text-xs text-gray-500 truncate">
-                                  {sug.city && <span>{sug.city}</span>}
-                                  {sug.state && <span>, {sug.state}</span>}
-                                </div>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
+                    {pickupOpen && pickupSug.length > 0 && (
+                      <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                        {pickupSug.map((sug) => (
+                          <li
+                            key={sug.id}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              pickLocal(sug);
+                            }}
+                            className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                          >
+                            <span className="text-xl flex-shrink-0">
+                              {getPlaceIcon(sug.label)}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-gray-800 font-medium truncate">
+                                {sug.name || sug.label}
+                              </div>
+                              <div className="text-[11px] text-gray-500 truncate">
+                                {sug.city && <span>{sug.city}</span>}
+                                {sug.state && <span>, {sug.state}</span>}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                          📦 Package
-                        </label>
+                  {/* package + date/time */}
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* package */}
+                    <div>
+                      <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                          📦
+                        </span>
+                        <span>Package</span>
+                      </label>
+                      <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                         <select
                           value={localPackage}
                           onChange={(e) => setLocalPackage(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                          className="w-full bg-transparent text-[13px] outline-none"
                         >
                           <option value="8x80">8 Hours / 80 Km</option>
                           <option value="12x120">12 Hours / 120 Km</option>
                           <option value="full">Full Day / 250 Km</option>
                         </select>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            📅 Date
-                          </label>
+                    {/* date + time row */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            📅
+                          </span>
+                          <span>Date</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             type="date"
                             value={localDate}
                             min={todayISO}
                             onChange={(e) => setLocalDate(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] outline-none"
                           />
                         </div>
-                        <div>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            ⏰ Time
-                          </label>
+                      </div>
+                      <div>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            ⏰
+                          </span>
+                          <span>Time</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             type="time"
                             value={localTime}
                             onChange={(e) => setLocalTime(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] outline-none"
                           />
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </>
+              )}
 
-                {/* Outstation */}
-                {service === "outstation" && (
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="relative" ref={fromListRef}>
-                      <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                        🚗 From City (India)
-                      </label>
+              {/* Outstation */}
+              {service === "outstation" && (
+                <>
+                  <div className="relative" ref={fromListRef}>
+                    <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                        🚗
+                      </span>
+                      <span>From City (India)</span>
+                    </label>
+                    <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                       <input
                         ref={fromInputRef}
                         type="text"
@@ -784,33 +809,38 @@ export default function Hero({ onSearch = () => {} }) {
                           setFromVal(e.target.value);
                         }}
                         placeholder="Source city"
-                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                        className="w-full bg-transparent text-[13px] placeholder:text-white/45 outline-none"
                       />
-                      {fromOpen && fromSug.length > 0 && (
-                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                          {fromSug.map((sug) => (
-                            <li
-                              key={sug.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                pickFrom(sug);
-                              }}
-                              className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                            >
-                              <span className="text-xl">🏙</span>
-                              <div className="text-gray-800 font-medium">
-                                {sug.label}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
+                    {fromOpen && fromSug.length > 0 && (
+                      <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                        {fromSug.map((sug) => (
+                          <li
+                            key={sug.id}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              pickFrom(sug);
+                            }}
+                            className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                          >
+                            <span className="text-xl">🏙</span>
+                            <div className="text-gray-800 font-medium">
+                              {sug.label}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
 
-                    <div className="relative" ref={toListRef}>
-                      <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                        🎯 To City (India)
-                      </label>
+                  <div className="relative" ref={toListRef}>
+                    <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                        🎯
+                      </span>
+                      <span>To City (India)</span>
+                    </label>
+                    <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                       <input
                         ref={toInputRef}
                         type="text"
@@ -820,98 +850,127 @@ export default function Hero({ onSearch = () => {} }) {
                           setToVal(e.target.value);
                         }}
                         placeholder="Destination city"
-                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                        className="w-full bg-transparent text-[13px] placeholder:text-white/45 outline-none"
                       />
-                      {toOpen && toSug.length > 0 && (
-                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                          {toSug.map((sug) => (
-                            <li
-                              key={sug.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                pickTo(sug);
-                              }}
-                              className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                            >
-                              <span className="text-xl">🏙</span>
-                              <div className="text-gray-800 font-medium">
-                                {sug.label}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
+                    {toOpen && toSug.length > 0 && (
+                      <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                        {toSug.map((sug) => (
+                          <li
+                            key={sug.id}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              pickTo(sug);
+                            }}
+                            className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                          >
+                            <span className="text-xl">🏙</span>
+                            <div className="text-gray-800 font-medium">
+                              {sug.label}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                          📅
+                        </span>
+                        <span>
                           {tripType === "oneway"
-                            ? "📅 Pickup Date"
-                            : "📅 Departure Date"}
-                        </label>
+                            ? "Pickup Date"
+                            : "Departure Date"}
+                        </span>
+                      </label>
+                      <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                         <input
                           type="date"
                           value={outPickupDate}
                           min={todayISO}
                           onChange={(e) => setOutPickupDate(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                          className="w-full bg-transparent text-[13px] outline-none"
                         />
                       </div>
-                      <div>
-                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                    </div>
+                    <div>
+                      <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                          ⏰
+                        </span>
+                        <span>
                           {tripType === "oneway"
-                            ? "⏰ Pickup Time"
-                            : "⏰ Departure Time"}
-                        </label>
+                            ? "Pickup Time"
+                            : "Departure Time"}
+                        </span>
+                      </label>
+                      <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                         <input
                           type="time"
                           value={outPickupTime}
                           onChange={(e) => setOutPickupTime(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                          className="w-full bg-transparent text-[13px] outline-none"
                         />
                       </div>
                     </div>
+                  </div>
 
-                    {tripType === "roundtrip" && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            📅 Return Date
-                          </label>
+                  {tripType === "roundtrip" && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            📅
+                          </span>
+                          <span>Return Date</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             type="date"
                             value={outReturnDate}
                             min={minReturnDate}
                             onChange={(e) => setOutReturnDate(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] outline-none"
                           />
                         </div>
-                        <div>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            ⏰ Return Time
-                          </label>
+                      </div>
+                      <div>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            ⏰
+                          </span>
+                          <span>Return Time</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             type="time"
                             value={outReturnTime}
                             onChange={(e) => setOutReturnTime(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] outline-none"
                           />
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </>
+              )}
 
-                {/* Airport */}
-                {service === "airport" && (
-                  <div className="grid grid-cols-1 gap-4">
-                    {airportMode === "drop" ? (
-                      <>
-                        <div className="relative" ref={pickupListRef}>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            🏠 Pickup Location (India)
-                          </label>
+              {/* Airport */}
+              {service === "airport" && (
+                <>
+                  {airportMode === "drop" ? (
+                    <>
+                      <div className="relative" ref={pickupListRef}>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            🏠
+                          </span>
+                          <span>Pickup Location (India)</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             ref={pickupInputRef}
                             type="text"
@@ -921,41 +980,46 @@ export default function Hero({ onSearch = () => {} }) {
                               setLocalPickup(e.target.value);
                             }}
                             placeholder="Home / Hotel / Office..."
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] placeholder:text-white/45 outline-none"
                           />
-                          {pickupOpen && pickupSug.length > 0 && (
-                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                              {pickupSug.map((sug) => (
-                                <li
-                                  key={sug.id}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    pickLocal(sug);
-                                  }}
-                                  className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                                >
-                                  <span className="text-xl flex-shrink-0">
-                                    {getPlaceIcon(sug.label)}
-                                  </span>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-gray-800 font-medium truncate">
-                                      {sug.name || sug.label}
-                                    </div>
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {sug.city && <span>{sug.city}</span>}
-                                      {sug.state && <span>, {sug.state}</span>}
-                                    </div>
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
                         </div>
+                        {pickupOpen && pickupSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                            {pickupSug.map((sug) => (
+                              <li
+                                key={sug.id}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  pickLocal(sug);
+                                }}
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              >
+                                <span className="text-xl flex-shrink-0">
+                                  {getPlaceIcon(sug.label)}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-gray-800 font-medium truncate">
+                                    {sug.name || sug.label}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500 truncate">
+                                    {sug.city && <span>{sug.city}</span>}
+                                    {sug.state && <span>, {sug.state}</span>}
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
 
-                        <div className="relative" ref={airportListRef}>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            ✈ Drop Airport
-                          </label>
+                      <div className="relative" ref={airportListRef}>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            ✈
+                          </span>
+                          <span>Drop Airport</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             ref={airportInputRef}
                             type="text"
@@ -965,35 +1029,40 @@ export default function Hero({ onSearch = () => {} }) {
                               setAirportText(e.target.value);
                             }}
                             placeholder="Enter airport name or code"
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] placeholder:text-white/45 outline-none"
                           />
-                          {airportOpen && airportSug.length > 0 && (
-                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                              {airportSug.map((sug) => (
-                                <li
-                                  key={sug.id}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    pickAirport(sug);
-                                  }}
-                                  className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                                >
-                                  <span className="text-xl">✈</span>
-                                  <div className="text-gray-800 font-medium truncate">
-                                    {sug.label}
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="relative" ref={airportListRef}>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            ✈ Pickup Airport
-                          </label>
+                        {airportOpen && airportSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                            {airportSug.map((sug) => (
+                              <li
+                                key={sug.id}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  pickAirport(sug);
+                                }}
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              >
+                                <span className="text-xl">✈</span>
+                                <div className="text-gray-800 font-medium truncate">
+                                  {sug.label}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative" ref={airportListRef}>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            ✈
+                          </span>
+                          <span>Pickup Airport</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             ref={airportInputRef}
                             type="text"
@@ -1003,33 +1072,38 @@ export default function Hero({ onSearch = () => {} }) {
                               setAirportText(e.target.value);
                             }}
                             placeholder="Enter airport name or code"
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] placeholder:text-white/45 outline-none"
                           />
-                          {airportOpen && airportSug.length > 0 && (
-                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                              {airportSug.map((sug) => (
-                                <li
-                                  key={sug.id}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    pickAirport(sug);
-                                  }}
-                                  className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                                >
-                                  <span className="text-xl">✈</span>
-                                  <div className="text-gray-800 font-medium truncate">
-                                    {sug.label}
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
                         </div>
+                        {airportOpen && airportSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                            {airportSug.map((sug) => (
+                              <li
+                                key={sug.id}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  pickAirport(sug);
+                                }}
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              >
+                                <span className="text-xl">✈</span>
+                                <div className="text-gray-800 font-medium truncate">
+                                  {sug.label}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
 
-                        <div className="relative" ref={toListRef}>
-                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                            🏠 Drop Location (India)
-                          </label>
+                      <div className="relative" ref={toListRef}>
+                        <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                            🏠
+                          </span>
+                          <span>Drop Location (India)</span>
+                        </label>
+                        <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                           <input
                             ref={toInputRef}
                             type="text"
@@ -1039,84 +1113,94 @@ export default function Hero({ onSearch = () => {} }) {
                               setToVal(e.target.value);
                             }}
                             placeholder="Home / Hotel / Office..."
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                            className="w-full bg-transparent text-[13px] placeholder:text-white/45 outline-none"
                           />
-                          {toOpen && toSug.length > 0 && (
-                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                              {toSug.map((sug) => (
-                                <li
-                                  key={sug.id}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    pickTo(sug);
-                                  }}
-                                  className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
-                                >
-                                  <span className="text-xl flex-shrink-0">
-                                    {getPlaceIcon(sug.label)}
-                                  </span>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-gray-800 font-medium truncate">
-                                      {sug.name || sug.label}
-                                    </div>
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {sug.city && <span>{sug.city}</span>}
-                                      {sug.state && <span>, {sug.state}</span>}
-                                    </div>
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
                         </div>
-                      </>
-                    )}
+                        {toOpen && toSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                            {toSug.map((sug) => (
+                              <li
+                                key={sug.id}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  pickTo(sug);
+                                }}
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              >
+                                <span className="text-xl flex-shrink-0">
+                                  {getPlaceIcon(sug.label)}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-gray-800 font-medium truncate">
+                                    {sug.name || sug.label}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500 truncate">
+                                    {sug.city && <span>{sug.city}</span>}
+                                    {sug.state && <span>, {sug.state}</span>}
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </>cd D:\citycarsolution\citycar-solution\frontend
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                          📅 Pickup Date
-                        </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                          📅
+                        </span>
+                        <span>Pickup Date</span>
+                      </label>
+                      <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                         <input
                           type="date"
                           value={airportDate}
                           min={todayISO}
                           onChange={(e) => setAirportDate(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                          className="w-full bg-transparent text-[13px] outline-none"
                         />
                       </div>
-                      <div>
-                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                          ⏰ Pickup Time
-                        </label>
+                    </div>
+                    <div>
+                      <label className="mb-1 inline-flex items-center gap-2 text-[12px] text-white/75">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                          ⏰
+                        </span>
+                        <span>Pickup Time</span>
+                      </label>
+                      <div className="rounded-2xl border border-white/20 bg-white/5 px-3.5 py-2.5">
                         <input
                           type="time"
                           value={airportTime}
                           onChange={(e) => setAirportTime(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                          className="w-full bg-transparent text-[13px] outline-none"
                         />
                       </div>
                     </div>
                   </div>
-                )}
+                </>
+              )}
 
-                {/* CTA button - GREEN */}
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold text-sm sm:text-base py-3.5 rounded-full shadow-[0_12px_35px_rgba(16,185,129,0.55)] hover:from-emerald-600 hover:to-green-600 transition-transform duration-150 active:scale-[0.98]"
-                  >
-                    {service === "local"
-                      ? "🔍 SEARCH CABS"
-                      : service === "outstation"
-                      ? tripType === "oneway"
-                        ? "🚗 SEARCH ONE WAY CABS"
-                        : "🔄 SEARCH ROUND TRIP CABS"
-                      : "✈ SEARCH AIRPORT CABS"}
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* CTA button – pink gradient like design */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 py-3.5 text-[15px] font-semibold shadow-[0_18px_40px_rgba(244,63,94,0.7)] hover:brightness-110 active:scale-[0.98] transition-all"
+                >
+                  {service === "local"
+                    ? "🔍 SEARCH CABS"
+                    : service === "outstation"
+                    ? tripType === "oneway"
+                      ? "🚗 SEARCH ONE WAY CABS"
+                      : "🔄 SEARCH ROUND TRIP CABS"
+                    : "✈ SEARCH AIRPORT CABS"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
