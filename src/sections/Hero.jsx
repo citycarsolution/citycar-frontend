@@ -122,8 +122,7 @@ export default function Hero({ onSearch = () => {} }) {
   const [airportText, setAirportText] = useState("");
   const [selectedAirportItem, setSelectedAirportItem] = useState(null);
 
-  // NEW: package state for local
-  const [localPackage, setLocalPackage] = useState("8x80"); // default 8h/80km
+  const [localPackage, setLocalPackage] = useState("8x80");
 
   const [localDate, setLocalDate] = useState(todayISO);
   const [localTime, setLocalTime] = useState(defaultTime);
@@ -157,10 +156,8 @@ export default function Hero({ onSearch = () => {} }) {
   const toInputRef = useRef(null);
   const airportInputRef = useRef(null);
 
-  // keep track of last-picked label to prevent immediate re-fetch reopening suggestions
   const lastPickedRef = useRef({ pickup: null, to: null, airport: null, from: null });
 
-  // min return date
   const minReturnDate = useMemo(() => {
     if (tripType === "roundtrip" && outPickupDate) {
       const nextDay = new Date(outPickupDate);
@@ -393,7 +390,6 @@ export default function Hero({ onSearch = () => {} }) {
     }
   }, [airportText, service, fetchAirportSuggestions]);
 
-  // outside click: close all suggestion lists
   useEffect(() => {
     function handleClickOutside(e) {
       if (pickupListRef.current && !pickupListRef.current.contains(e.target)) setPickupOpen(false);
@@ -557,12 +553,10 @@ export default function Hero({ onSearch = () => {} }) {
     if (payload) {
       try {
         console.log("SEARCH_PAYLOAD:", payload);
-      } catch (e2) {}
+      } catch {}
       onSearch(payload);
     }
   };
-
-  /* ====================== JSX (mobile friendly card) ====================== */
 
   return (
     <section className="relative w-full min-h-[700px] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
@@ -588,7 +582,6 @@ export default function Hero({ onSearch = () => {} }) {
       {/* centred content (phone-style card) */}
       <div className="relative z-20 w-full flex justify-center px-3 sm:px-4">
         <div className="w-full max-w-[420px] sm:max-w-[480px] md:max-w-4xl mx-auto text-white">
-          {/* small heading on top for mobile */}
           <div className="mb-4 text-left md:text-center">
             <p className="text-xs sm:text-sm text-sky-200/90 uppercase tracking-[0.18em]">
               Professional Car Booking
@@ -598,7 +591,6 @@ export default function Hero({ onSearch = () => {} }) {
             </h2>
           </div>
 
-          {/* glowing phone frame like design */}
           <div className="bg-gradient-to-tr from-cyan-400/60 via-transparent to-pink-500/70 p-[1.5px] rounded-[32px] shadow-[0_0_45px_rgba(56,189,248,0.65)]">
             <div className="bg-white/8 backdrop-blur-2xl rounded-[30px] border border-white/15 px-4 py-5 sm:px-6 sm:py-7 md:px-8 md:py-8">
               {/* service tabs */}
@@ -1127,11 +1119,11 @@ export default function Hero({ onSearch = () => {} }) {
                   </div>
                 )}
 
-                {/* CTA button */}
+                {/* CTA button - GREEN now */}
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm sm:text-base py-3.5 rounded-full shadow-[0_12px_35px_rgba(244,63,94,0.55)] hover:from-pink-600 hover:to-red-600 transition-transform duration-150 active:scale-[0.98]"
+                    className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold text-sm sm:text-base py-3.5 rounded-full shadow-[0_12px_35px_rgba(16,185,129,0.55)] hover:from-emerald-600 hover:to-green-600 transition-transform duration-150 active:scale-[0.98]"
                   >
                     {service === "local"
                       ? "🔍 SEARCH CABS"
