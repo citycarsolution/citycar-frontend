@@ -4,6 +4,11 @@ import { AIRPORTS } from "../data/airportsData";
 
 const PHOTON_URL = "https://photon.komoot.io/api/";
 
+// helpers for date / time so calendar hamesha current se start ho
+const getTodayISO = () => new Date().toISOString().split("T")[0];
+const getDefaultTime = () =>
+  new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5);
+
 function debounce(fn, ms = 350) {
   let t;
   return (...args) => {
@@ -14,21 +19,69 @@ function debounce(fn, ms = 350) {
 
 /* India helpers */
 const IN_STATES = [
-  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry","Chandigarh","Dadra and Nagar Haveli and Daman and Diu","Andaman and Nicobar Islands","Lakshadweep",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Puducherry",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Andaman and Nicobar Islands",
+  "Lakshadweep",
 ];
+
 const isIndiaFeature = (p) => {
   const country = (p?.country || "").toLowerCase();
   const state = (p?.state || "").toLowerCase();
-  return country === "india" || IN_STATES.some((s) => s.toLowerCase() === state);
+  return (
+    country === "india" ||
+    IN_STATES.some((s) => s.toLowerCase() === state)
+  );
 };
+
 function normalizeIndiaLabel(p) {
   const state = p.state || "";
   let city = p.city || p.town || p.village || p.suburb || "";
 
   if (!city && state === "Maharashtra") {
     const admin = [
-      p.city, p.town, p.village, p.county, p.district, p.state_district,
-    ].filter(Boolean).join(" ").toLowerCase();
+      p.city,
+      p.town,
+      p.village,
+      p.county,
+      p.district,
+      p.state_district,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
     if (/mumbai/.test(admin)) city = "Mumbai";
   }
   if (!city && state === "Maharashtra" && /(ward)/i.test(p.district || "")) {
@@ -39,12 +92,15 @@ function normalizeIndiaLabel(p) {
   const parts = [name, city, state, "India"].filter(Boolean);
   return { label: parts.join(", "), name, city, state, country: "India" };
 }
+
 async function photonSearch(q, limit = 8, lat = null, lon = null, signal = null) {
   if (!q || q.trim().length < 2) return [];
   const cleanQuery = q.replace(/[^\w\s]/gi, "").trim();
   if (cleanQuery.length < 2) return [];
   const query = `${cleanQuery} India`;
-  const urlBase = `${PHOTON_URL}?q=${encodeURIComponent(query)}&limit=${limit}&lang=en`;
+  const urlBase = `${PHOTON_URL}?q=${encodeURIComponent(
+    query
+  )}&limit=${limit}&lang=en`;
   const url = lat && lon ? `${urlBase}&lat=${lat}&lon=${lon}` : urlBase;
 
   try {
@@ -109,8 +165,8 @@ export default function Hero({ onSearch = () => {} }) {
   const [tripType, setTripType] = useState("oneway");
   const [videoReady, setVideoReady] = useState(false);
 
-  const todayISO = new Date().toISOString().split("T")[0];
-  const defaultTime = new Date(Date.now() + 3600000).toTimeString().slice(0, 5);
+  const todayISO = getTodayISO();
+  const defaultTime = getDefaultTime();
 
   // form state
   const [localPickup, setLocalPickup] = useState("");
@@ -156,7 +212,12 @@ export default function Hero({ onSearch = () => {} }) {
   const toInputRef = useRef(null);
   const airportInputRef = useRef(null);
 
-  const lastPickedRef = useRef({ pickup: null, to: null, airport: null, from: null });
+  const lastPickedRef = useRef({
+    pickup: null,
+    to: null,
+    airport: null,
+    from: null,
+  });
 
   const minReturnDate = useMemo(() => {
     if (tripType === "roundtrip" && outPickupDate) {
@@ -178,7 +239,10 @@ export default function Hero({ onSearch = () => {} }) {
         }
         const qq = q.toLowerCase().trim();
 
-        if (lastPickedRef.current.pickup && qq === lastPickedRef.current.pickup.toLowerCase()) {
+        if (
+          lastPickedRef.current.pickup &&
+          qq === lastPickedRef.current.pickup.toLowerCase()
+        ) {
           return;
         }
 
@@ -186,7 +250,13 @@ export default function Hero({ onSearch = () => {} }) {
         try {
           if (pickupController.current) pickupController.current.abort();
           pickupController.current = new AbortController();
-          const photon = await photonSearch(q, 12, null, null, pickupController.current.signal);
+          const photon = await photonSearch(
+            q,
+            12,
+            null,
+            null,
+            pickupController.current.signal
+          );
           const photonFormatted = photon.map((place, idx) => ({
             ...place,
             id: `photon_${idx}_${place.id}`,
@@ -237,7 +307,10 @@ export default function Hero({ onSearch = () => {} }) {
         }
         const qq = q.toLowerCase().trim();
 
-        if (lastPickedRef.current.to && qq === lastPickedRef.current.to.toLowerCase()) {
+        if (
+          lastPickedRef.current.to &&
+          qq === lastPickedRef.current.to.toLowerCase()
+        ) {
           return;
         }
 
@@ -245,7 +318,13 @@ export default function Hero({ onSearch = () => {} }) {
         try {
           if (toController.current) toController.current.abort();
           toController.current = new AbortController();
-          const photon = await photonSearch(q, 12, null, null, toController.current.signal);
+          const photon = await photonSearch(
+            q,
+            12,
+            null,
+            null,
+            toController.current.signal
+          );
           const photonFormatted = photon.map((place, idx) => ({
             ...place,
             id: `photon_drop_${idx}_${place.id}`,
@@ -296,7 +375,10 @@ export default function Hero({ onSearch = () => {} }) {
         }
         const qq = q.toLowerCase();
 
-        if (lastPickedRef.current.from && qq === lastPickedRef.current.from.toLowerCase()) {
+        if (
+          lastPickedRef.current.from &&
+          qq === lastPickedRef.current.from.toLowerCase()
+        ) {
           return;
         }
 
@@ -320,7 +402,10 @@ export default function Hero({ onSearch = () => {} }) {
         }
         const qq = q.toLowerCase();
 
-        if (lastPickedRef.current.airport && qq === lastPickedRef.current.airport.toLowerCase()) {
+        if (
+          lastPickedRef.current.airport &&
+          qq === lastPickedRef.current.airport.toLowerCase()
+        ) {
           return;
         }
 
@@ -363,7 +448,10 @@ export default function Hero({ onSearch = () => {} }) {
       }
       const qq = toVal.toLowerCase();
 
-      if (lastPickedRef.current.to && qq === lastPickedRef.current.to.toLowerCase()) {
+      if (
+        lastPickedRef.current.to &&
+        qq === lastPickedRef.current.to.toLowerCase()
+      ) {
         return;
       }
 
@@ -392,10 +480,14 @@ export default function Hero({ onSearch = () => {} }) {
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (pickupListRef.current && !pickupListRef.current.contains(e.target)) setPickupOpen(false);
-      if (fromListRef.current && !fromListRef.current.contains(e.target)) setFromOpen(false);
-      if (toListRef.current && !toListRef.current.contains(e.target)) setToOpen(false);
-      if (airportListRef.current && !airportListRef.current.contains(e.target)) setAirportOpen(false);
+      if (pickupListRef.current && !pickupListRef.current.contains(e.target))
+        setPickupOpen(false);
+      if (fromListRef.current && !fromListRef.current.contains(e.target))
+        setFromOpen(false);
+      if (toListRef.current && !toListRef.current.contains(e.target))
+        setToOpen(false);
+      if (airportListRef.current && !airportListRef.current.contains(e.target))
+        setAirportOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -403,7 +495,8 @@ export default function Hero({ onSearch = () => {} }) {
 
   async function enrichIfNoCoords(item) {
     if (!item) return item;
-    if (typeof item.lat === "number" && typeof item.lon === "number") return item;
+    if (typeof item.lat === "number" && typeof item.lon === "number")
+      return item;
     const q = item?.label || item?.name || "";
     if (!q) return item;
     try {
@@ -421,7 +514,8 @@ export default function Hero({ onSearch = () => {} }) {
     setPickupOpen(false);
     lastPickedRef.current.pickup = x.label;
     setTimeout(() => {
-      if (lastPickedRef.current.pickup === x.label) lastPickedRef.current.pickup = null;
+      if (lastPickedRef.current.pickup === x.label)
+        lastPickedRef.current.pickup = null;
     }, 700);
     pickupInputRef.current?.blur();
   };
@@ -433,7 +527,8 @@ export default function Hero({ onSearch = () => {} }) {
     setFromOpen(false);
     lastPickedRef.current.from = x.label;
     setTimeout(() => {
-      if (lastPickedRef.current.from === x.label) lastPickedRef.current.from = null;
+      if (lastPickedRef.current.from === x.label)
+        lastPickedRef.current.from = null;
     }, 700);
     fromInputRef.current?.blur();
   };
@@ -445,7 +540,8 @@ export default function Hero({ onSearch = () => {} }) {
     setToOpen(false);
     lastPickedRef.current.to = x.label;
     setTimeout(() => {
-      if (lastPickedRef.current.to === x.label) lastPickedRef.current.to = null;
+      if (lastPickedRef.current.to === x.label)
+        lastPickedRef.current.to = null;
     }, 700);
     toInputRef.current?.blur();
   };
@@ -457,9 +553,23 @@ export default function Hero({ onSearch = () => {} }) {
     setAirportOpen(false);
     lastPickedRef.current.airport = x.label;
     setTimeout(() => {
-      if (lastPickedRef.current.airport === x.label) lastPickedRef.current.airport = null;
+      if (lastPickedRef.current.airport === x.label)
+        lastPickedRef.current.airport = null;
     }, 700);
     airportInputRef.current?.blur();
+  };
+
+  const resetDatesToCurrent = () => {
+    const t = getTodayISO();
+    const tm = getDefaultTime();
+    setLocalDate(t);
+    setLocalTime(tm);
+    setOutPickupDate(t);
+    setOutPickupTime(tm);
+    setOutReturnDate(t);
+    setOutReturnTime(tm);
+    setAirportDate(t);
+    setAirportTime(tm);
   };
 
   const handleServiceChange = (newService) => {
@@ -477,12 +587,17 @@ export default function Hero({ onSearch = () => {} }) {
     setToSug([]);
     setAirportSug([]);
     setTripType("oneway");
+    resetDatesToCurrent(); // calendar hamesha current se
   };
+
   const handleTripTypeChange = (type) => {
     setTripType(type);
     if (type === "oneway") {
-      setOutReturnDate(todayISO);
-      setOutReturnTime(defaultTime);
+      // one way pe aate hi return date/time ko current kar do
+      const t = getTodayISO();
+      const tm = getDefaultTime();
+      setOutReturnDate(t);
+      setOutReturnTime(tm);
     }
   };
 
@@ -495,8 +610,18 @@ export default function Hero({ onSearch = () => {} }) {
         alert("Please enter pickup location");
         return;
       }
-      const pkgHours = localPackage === "12x120" ? 12 : localPackage === "8x80" ? 8 : 24;
-      const pkgKm = localPackage === "12x120" ? 120 : localPackage === "8x80" ? 80 : 250;
+      const pkgHours =
+        localPackage === "12x120"
+          ? 12
+          : localPackage === "8x80"
+          ? 8
+          : 24;
+      const pkgKm =
+        localPackage === "12x120"
+          ? 120
+          : localPackage === "8x80"
+          ? 80
+          : 250;
       payload = {
         service: "local",
         pickup: selectedLocalPlace || { label: localPickup },
@@ -519,7 +644,10 @@ export default function Hero({ onSearch = () => {} }) {
         drop: selectedToPlace || { label: toVal },
         pickupDate: outPickupDate,
         pickupTime: outPickupTime,
-        ...(tripType === "roundtrip" && { returnDate: outReturnDate, returnTime: outReturnTime }),
+        ...(tripType === "roundtrip" && {
+          returnDate: outReturnDate,
+          returnTime: outReturnTime,
+        }),
       };
     } else if (service === "airport") {
       if (airportMode === "drop") {
@@ -560,7 +688,7 @@ export default function Hero({ onSearch = () => {} }) {
 
   return (
     <section className="relative w-full min-h-[700px] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
-      {/* background video */}
+      {/* background video – as is */}
       <video
         className={`absolute inset-0 w-full h-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${
           videoReady ? "opacity-100" : "opacity-0"
@@ -583,25 +711,25 @@ export default function Hero({ onSearch = () => {} }) {
       <div className="relative z-20 w-full flex justify-center px-3 sm:px-4">
         <div className="w-full max-w-[420px] sm:max-w-[480px] md:max-w-4xl mx-auto text-white">
           <div className="mb-4 text-left md:text-center">
-            <p className="text-xs sm:text-sm text-sky-200/90 uppercase tracking-[0.18em]">
+            <p className="text-xs sm:text-sm text-emerald-200/90 uppercase tracking-[0.18em]">
               Professional Car Booking
             </p>
             <h2 className="mt-1 text-2xl sm:text-3xl font-semibold">
-              Local, Outstation & Airport Cabs
+              Local, Outstation &amp; Airport Cabs
             </h2>
           </div>
 
-          <div className="bg-gradient-to-tr from-cyan-400/60 via-transparent to-pink-500/70 p-[1.5px] rounded-[32px] shadow-[0_0_45px_rgba(56,189,248,0.65)]">
-            <div className="bg-white/8 backdrop-blur-2xl rounded-[30px] border border-white/15 px-4 py-5 sm:px-6 sm:py-7 md:px-8 md:py-8">
+          <div className="bg-gradient-to-tr from-emerald-400/70 via-transparent to-green-500/70 p-[1.5px] rounded-[32px] shadow-[0_0_45px_rgba(16,185,129,0.6)]">
+            <div className="bg-black/35 backdrop-blur-2xl rounded-[30px] border border-white/15 px-4 py-5 sm:px-6 sm:py-7 md:px-8 md:py-8">
               {/* service tabs */}
               <div className="flex items-center justify-between gap-2 mb-5 overflow-x-auto">
                 <button
                   type="button"
                   onClick={() => handleServiceChange("local")}
-                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all border ${
                     service === "local"
-                      ? "bg-white text-sky-700 shadow-md"
-                      : "bg-white/10 text-white/80 hover:bg-white/20"
+                      ? "bg-emerald-500 border-emerald-300 text-white shadow-md shadow-emerald-500/40"
+                      : "bg-white/5 border-white/15 text-white/80 hover:bg-white/15"
                   }`}
                 >
                   🏙 Local Rentals
@@ -609,10 +737,10 @@ export default function Hero({ onSearch = () => {} }) {
                 <button
                   type="button"
                   onClick={() => handleServiceChange("outstation")}
-                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all border ${
                     service === "outstation"
-                      ? "bg-white text-sky-700 shadow-md"
-                      : "bg-white/10 text-white/80 hover:bg-white/20"
+                      ? "bg-emerald-500 border-emerald-300 text-white shadow-md shadow-emerald-500/40"
+                      : "bg-white/5 border-white/15 text-white/80 hover:bg-white/15"
                   }`}
                 >
                   🚗 Outstation
@@ -620,10 +748,10 @@ export default function Hero({ onSearch = () => {} }) {
                 <button
                   type="button"
                   onClick={() => handleServiceChange("airport")}
-                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                  className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all border ${
                     service === "airport"
-                      ? "bg-white text-sky-700 shadow-md"
-                      : "bg-white/10 text-white/80 hover:bg-white/20"
+                      ? "bg-emerald-500 border-emerald-300 text-white shadow-md shadow-emerald-500/40"
+                      : "bg-white/5 border-white/15 text-white/80 hover:bg-white/15"
                   }`}
                 >
                   ✈ Airport
@@ -646,10 +774,10 @@ export default function Hero({ onSearch = () => {} }) {
                       <button
                         type="button"
                         onClick={() => handleTripTypeChange("oneway")}
-                        className={`px-3 py-1.5 rounded-full border ${
+                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
                           tripType === "oneway"
-                            ? "bg-sky-500 text-white border-sky-400"
-                            : "bg-white/10 border-white/20 text-white/80"
+                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
+                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
                         }`}
                       >
                         🚗 One Way
@@ -657,10 +785,10 @@ export default function Hero({ onSearch = () => {} }) {
                       <button
                         type="button"
                         onClick={() => handleTripTypeChange("roundtrip")}
-                        className={`px-3 py-1.5 rounded-full border ${
+                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
                           tripType === "roundtrip"
-                            ? "bg-sky-500 text-white border-sky-400"
-                            : "bg-white/10 border-white/20 text-white/80"
+                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
+                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
                         }`}
                       >
                         🔄 Round Trip
@@ -679,10 +807,10 @@ export default function Hero({ onSearch = () => {} }) {
                           setToVal("");
                           setSelectedToPlace(null);
                         }}
-                        className={`px-3 py-1.5 rounded-full border ${
+                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
                           airportMode === "drop"
-                            ? "bg-sky-500 text-white border-sky-400"
-                            : "bg-white/10 border-white/20 text-white/80"
+                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
+                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
                         }`}
                       >
                         🚗 Drop to Airport
@@ -696,10 +824,10 @@ export default function Hero({ onSearch = () => {} }) {
                           setLocalPickup("");
                           setSelectedLocalPlace(null);
                         }}
-                        className={`px-3 py-1.5 rounded-full border ${
+                        className={`px-3 py-1.5 rounded-full border text-xs sm:text-sm transition-all ${
                           airportMode === "pickup"
-                            ? "bg-sky-500 text-white border-sky-400"
-                            : "bg-white/10 border-white/20 text-white/80"
+                            ? "bg-emerald-500 text-white border-emerald-300 shadow-md shadow-emerald-500/40"
+                            : "bg-white/5 border-white/20 text-white/80 hover:bg-white/15"
                         }`}
                       >
                         🛬 Pickup from Airport
@@ -727,7 +855,7 @@ export default function Hero({ onSearch = () => {} }) {
                           setLocalPickup(e.target.value);
                         }}
                         placeholder="Colaba, Bandra, Andheri..."
-                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                       />
                       {pickupOpen && pickupSug.length > 0 && (
                         <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
@@ -740,7 +868,9 @@ export default function Hero({ onSearch = () => {} }) {
                               }}
                               className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                             >
-                              <span className="text-xl flex-shrink-0">{getPlaceIcon(sug.label)}</span>
+                              <span className="text-xl flex-shrink-0">
+                                {getPlaceIcon(sug.label)}
+                              </span>
                               <div className="flex-1 min-w-0">
                                 <div className="text-gray-800 font-medium truncate">
                                   {sug.name || sug.label}
@@ -764,7 +894,7 @@ export default function Hero({ onSearch = () => {} }) {
                         <select
                           value={localPackage}
                           onChange={(e) => setLocalPackage(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                         >
                           <option value="8x80">8 Hours / 80 Km</option>
                           <option value="12x120">12 Hours / 120 Km</option>
@@ -782,7 +912,7 @@ export default function Hero({ onSearch = () => {} }) {
                             value={localDate}
                             min={todayISO}
                             onChange={(e) => setLocalDate(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                         </div>
                         <div>
@@ -793,7 +923,7 @@ export default function Hero({ onSearch = () => {} }) {
                             type="time"
                             value={localTime}
                             onChange={(e) => setLocalTime(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                         </div>
                       </div>
@@ -817,7 +947,7 @@ export default function Hero({ onSearch = () => {} }) {
                           setFromVal(e.target.value);
                         }}
                         placeholder="Source city"
-                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                       />
                       {fromOpen && fromSug.length > 0 && (
                         <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
@@ -831,7 +961,9 @@ export default function Hero({ onSearch = () => {} }) {
                               className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                             >
                               <span className="text-xl">🏙</span>
-                              <div className="text-gray-800 font-medium">{sug.label}</div>
+                              <div className="text-gray-800 font-medium">
+                                {sug.label}
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -851,7 +983,7 @@ export default function Hero({ onSearch = () => {} }) {
                           setToVal(e.target.value);
                         }}
                         placeholder="Destination city"
-                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                        className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                       />
                       {toOpen && toSug.length > 0 && (
                         <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
@@ -865,7 +997,9 @@ export default function Hero({ onSearch = () => {} }) {
                               className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                             >
                               <span className="text-xl">🏙</span>
-                              <div className="text-gray-800 font-medium">{sug.label}</div>
+                              <div className="text-gray-800 font-medium">
+                                {sug.label}
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -875,25 +1009,29 @@ export default function Hero({ onSearch = () => {} }) {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                          {tripType === "oneway" ? "📅 Pickup Date" : "📅 Departure Date"}
+                          {tripType === "oneway"
+                            ? "📅 Pickup Date"
+                            : "📅 Departure Date"}
                         </label>
                         <input
                           type="date"
                           value={outPickupDate}
                           min={todayISO}
                           onChange={(e) => setOutPickupDate(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                         />
                       </div>
                       <div>
                         <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
-                          {tripType === "oneway" ? "⏰ Pickup Time" : "⏰ Departure Time"}
+                          {tripType === "oneway"
+                            ? "⏰ Pickup Time"
+                            : "⏰ Departure Time"}
                         </label>
                         <input
                           type="time"
                           value={outPickupTime}
                           onChange={(e) => setOutPickupTime(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                         />
                       </div>
                     </div>
@@ -909,7 +1047,7 @@ export default function Hero({ onSearch = () => {} }) {
                             value={outReturnDate}
                             min={minReturnDate}
                             onChange={(e) => setOutReturnDate(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                         </div>
                         <div>
@@ -920,7 +1058,7 @@ export default function Hero({ onSearch = () => {} }) {
                             type="time"
                             value={outReturnTime}
                             onChange={(e) => setOutReturnTime(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                         </div>
                       </div>
@@ -946,7 +1084,7 @@ export default function Hero({ onSearch = () => {} }) {
                               setLocalPickup(e.target.value);
                             }}
                             placeholder="Home / Hotel / Office..."
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                           {pickupOpen && pickupSug.length > 0 && (
                             <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
@@ -959,7 +1097,9 @@ export default function Hero({ onSearch = () => {} }) {
                                   }}
                                   className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                                 >
-                                  <span className="text-xl flex-shrink-0">{getPlaceIcon(sug.label)}</span>
+                                  <span className="text-xl flex-shrink-0">
+                                    {getPlaceIcon(sug.label)}
+                                  </span>
                                   <div className="flex-1 min-w-0">
                                     <div className="text-gray-800 font-medium truncate">
                                       {sug.name || sug.label}
@@ -988,7 +1128,7 @@ export default function Hero({ onSearch = () => {} }) {
                               setAirportText(e.target.value);
                             }}
                             placeholder="Enter airport name or code"
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                           {airportOpen && airportSug.length > 0 && (
                             <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
@@ -1002,7 +1142,9 @@ export default function Hero({ onSearch = () => {} }) {
                                   className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                                 >
                                   <span className="text-xl">✈</span>
-                                  <div className="text-gray-800 font-medium truncate">{sug.label}</div>
+                                  <div className="text-gray-800 font-medium truncate">
+                                    {sug.label}
+                                  </div>
                                 </li>
                               ))}
                             </ul>
@@ -1024,7 +1166,7 @@ export default function Hero({ onSearch = () => {} }) {
                               setAirportText(e.target.value);
                             }}
                             placeholder="Enter airport name or code"
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                           {airportOpen && airportSug.length > 0 && (
                             <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
@@ -1038,7 +1180,9 @@ export default function Hero({ onSearch = () => {} }) {
                                   className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                                 >
                                   <span className="text-xl">✈</span>
-                                  <div className="text-gray-800 font-medium truncate">{sug.label}</div>
+                                  <div className="text-gray-800 font-medium truncate">
+                                    {sug.label}
+                                  </div>
                                 </li>
                               ))}
                             </ul>
@@ -1058,7 +1202,7 @@ export default function Hero({ onSearch = () => {} }) {
                               setToVal(e.target.value);
                             }}
                             placeholder="Home / Hotel / Office..."
-                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                           />
                           {toOpen && toSug.length > 0 && (
                             <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
@@ -1101,7 +1245,7 @@ export default function Hero({ onSearch = () => {} }) {
                           value={airportDate}
                           min={todayISO}
                           onChange={(e) => setAirportDate(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                         />
                       </div>
                       <div>
@@ -1112,14 +1256,14 @@ export default function Hero({ onSearch = () => {} }) {
                           type="time"
                           value={airportTime}
                           onChange={(e) => setAirportTime(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                         />
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* CTA button - GREEN now */}
+                {/* CTA button - GREEN */}
                 <div className="pt-2">
                   <button
                     type="submit"
