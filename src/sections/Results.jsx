@@ -1,4 +1,3 @@
-// src/sections/Results.jsx
 import React, { useEffect, useMemo, useState } from "react";
 
 const PRICE = {
@@ -43,9 +42,9 @@ const PRICE = {
 
 // car data
 const CARS = [
-  { id: "sedan",    title: "Sedan — Dzire / Xcent",  seats: "4 + 1", img: "/cars/sedan.png",    description: "AC Col 14 - 1" },
-  { id: "ertiga",   title: "SUV — Ertiga / Enjoy",   seats: "5 + 1", img: "/cars/ertiga.jpg",   description: "AC Col 15 - 1" },
-  { id: "carens",   title: "SUV — Kia Carens",       seats: "5 + 1", img: "/cars/carens.jpg",   description: "AC Col 15 - 1" },
+  { id: "sedan",    title: "Sedan — Dzire / Xcent",  seats: "4 + 1", img: "/cars/sedan.png",    description: "AC C: 0.14 - 1" },
+  { id: "ertiga",   title: "SUV — Ertiga / Enjoy",   seats: "5 + 1", img: "/cars/ertiga.jpg",   description: "AC C: 0.15 - 1" },
+  { id: "carens",   title: "SUV — Kia Carens",       seats: "5 + 1", img: "/cars/carens.jpg",   description: "Premium SUV" },
   { id: "crysta",   title: "SUV — Innova Crysta",    seats: "5 + 1", img: "/cars/crysta.jpg",   description: "Premium SUV" },
   { id: "hycross",  title: "SUV — Innova Hycross",   seats: "5 + 1", img: "/cars/hycross.jpg",  description: "Premium SUV" },
   { id: "fortuner", title: "SUV — Fortuner",         seats: "5 + 1", img: "/cars/Fortuner.jpg", description: "Luxury SUV" },
@@ -320,40 +319,62 @@ export default function Results({
   };
 
   return (
-    <section className="w-full min-h-screen flex justify-center bg-slate-100">
-      {/* inner mobile container (like phone) */}
-      <div className="w-full max-w-xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        {/* top bar */}
-        <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap">
-          <div className="min-w-0">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-slate-900">
-              {headerLine}
-            </h2>
-            <p className="text-[11px] sm:text-xs text-gray-500 mt-1">
-              {PRICE.airport.note}
-            </p>
-            {service === "local" && (
-              <p className="text-[11px] text-emerald-700 mt-0.5">
-                Package:{" "}
-                {cityPackKey === "12x120"
-                  ? "12 Hours / 120 KM"
-                  : "8 Hours / 80 KM"}
-              </p>
-            )}
+    <section className="w-full min-h-screen flex justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Main Container - Now 80% width on laptop */}
+      <div className="w-full max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8">
+        
+        {/* Header Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-200">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+                City Car Solution
+              </h1>
+              <p className="text-lg text-slate-600 mb-3">Professional Car Booking</p>
+              
+              <div className="flex flex-wrap gap-4 text-sm text-slate-700">
+                <span>Home</span>
+                <span>Services</span>
+                <span>Pricing</span>
+                <span>Contact</span>
+                <span className="font-semibold text-blue-600">+91 9082552031</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={onBack}
+                className="px-6 py-3 rounded-xl border-2 border-slate-300 bg-white text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+              >
+                Change Search
+              </button>
+              <button className="px-6 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-lg">
+                Book on WhatsApp
+              </button>
+            </div>
           </div>
-          <button
-            onClick={onBack}
-            className="text-xs sm:text-sm px-3 py-2 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 active:scale-[0.98] transition"
-          >
-            ← Change Search
-          </button>
+
+          {/* Location Info */}
+          <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+              <div>
+                <p className="font-semibold text-slate-900">Bandipora, Jammu and Kashmir, India - 8H/80KM</p>
+                <p className="text-sm text-slate-600">Billing from Pick-up to Pick-up. Toll & parking extra.</p>
+                {service === "local" && (
+                  <p className="text-sm text-emerald-700 font-medium mt-1">
+                    Package: {cityPackKey === "12x120" ? "12 hours / 120 KM" : "8 hours / 80 KM"}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* controls */}
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-          {/* distance */}
-          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
-            <label className="text-[11px] font-medium text-gray-600">
+        {/* Controls Grid - Improved for Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Distance Input */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+            <label className="block text-sm font-semibold text-slate-800 mb-3">
               Estimated distance (km)
             </label>
             <input
@@ -362,19 +383,21 @@ export default function Results({
               step="1"
               value={km ?? 0}
               onChange={(e) => setKm(Number(e.target.value) || 0)}
-              className="mt-1 w-full p-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400"
-              placeholder="Approx road km"
+              className="w-full p-4 text-lg border-2 border-slate-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all"
+              placeholder="Enter distance"
             />
-            <p className="text-[11px] text-gray-500 mt-1">
-              {autoKm !== null
-                ? "Auto from map • You can edit"
-                : "No map coords — type approx km"}
+            <p className="text-sm text-slate-500 mt-3">
+              {autoKm !== null ? (
+                <span className="text-green-600 font-medium">✓ Auto from map • Fixed (No edit)</span>
+              ) : (
+                "No map coordinates — type approximate km"
+              )}
             </p>
           </div>
 
-          {/* arrival */}
-          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
-            <label className="text-[11px] font-medium text-gray-600">
+          {/* Arrival Delay */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+            <label className="block text-sm font-semibold text-slate-800 mb-3">
               Arrival delay (minutes)
             </label>
             <input
@@ -386,10 +409,10 @@ export default function Results({
                 setTouchedDelay(true);
                 setArrivalDelayMin(Number(e.target.value) || 0);
               }}
-              className="mt-1 w-full p-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400"
+              className="w-full p-4 text-lg border-2 border-slate-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all"
             />
-            <div className="mt-1 text-[11px] text-gray-700 flex items-center flex-wrap gap-1">
-              <span className="inline-flex px-2 py-[2px] rounded-full bg-slate-100">
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
+              <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
                 ≈ {prettyDuration(estimatedTravelMin)}
               </span>
               <button
@@ -398,29 +421,29 @@ export default function Results({
                   setTouchedDelay(false);
                   setArrivalDelayMin(estimatedTravelMin);
                 }}
-                className="underline text-rose-600"
+                className="text-blue-600 hover:text-blue-700 font-medium text-sm underline"
               >
-                Use this
+                Use estimated time
               </button>
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">
-              Arrival time: {arrivalClock || "—"}
+            <p className="text-sm text-slate-600 mt-2">
+              Arrival time: <span className="font-semibold">{arrivalClock || "—"}</span>
             </p>
           </div>
 
-          {/* notes */}
-          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs col-span-2 md:col-span-1">
-            <label className="text-[11px] font-medium text-gray-600">
-              Notes
+          {/* Notes */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+            <label className="block text-sm font-semibold text-slate-800 mb-3">
+              Important Notes
             </label>
-            <div className="text-[11px] mt-2 text-gray-700 leading-snug">
+            <div className="text-sm text-slate-700 leading-relaxed bg-yellow-50 p-4 rounded-lg border border-yellow-200">
               {subNote}
             </div>
           </div>
         </div>
 
-        {/* results list */}
-        <div className="mt-5 space-y-3 sm:space-y-4">
+        {/* Cars Grid - Responsive for Desktop */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {CARS.map((car) => {
             const fare = fareFor(car.id);
             if (!fare) return null;
@@ -433,208 +456,146 @@ export default function Results({
             return (
               <div
                 key={car.id}
-                className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm"
+                className="bg-white rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
               >
-                <div className="p-3 sm:p-4 flex items-center gap-3">
-                  {/* image */}
+                <div className="p-6 flex flex-col lg:flex-row lg:items-center gap-6">
+                  {/* Car Image */}
                   <div className="flex-shrink-0">
                     <img
                       src={car.img}
                       alt={car.title}
-                      className="w-24 h-18 sm:w-28 sm:h-20 object-cover rounded-xl border border-slate-200 bg-slate-50"
+                      className="w-32 h-24 lg:w-40 lg:h-28 object-cover rounded-xl border-2 border-slate-200 bg-slate-50"
                       onError={(e) => handleImageError(e, car.id)}
                     />
                   </div>
 
-                  {/* text */}
+                  {/* Car Details */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-[14px] sm:text-sm text-slate-900 truncate">
-                      {car.title}
-                    </h3>
-                    <p className="text-[11px] text-gray-500">
-                      {car.description} • {car.seats}
-                    </p>
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">
+                          {car.title}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm text-slate-600 mb-3">
+                          <span>{car.description}</span>
+                          <span>•</span>
+                          <span>Seats: {car.seats}</span>
+                        </div>
 
-                    {service === "airport" && airportCfg && (
-                      <p className="text-[11px] sm:text-xs text-gray-700 mt-1">
-                        Base {airportCfg.baseKm}
-                        {airportCfg.baseIsHours ? " (4h/40km)" : "km"} • Extra ₹
-                        {airportCfg.extraPerKm}/km • After{" "}
-                        {airportCfg.waitFreeMin /
-                          (airportCfg.baseIsHours ? 60 : 1)}
-                        {airportCfg.baseIsHours ? "h" : "m"}: ₹
-                        {airportCfg.waitPerMin}/min
-                      </p>
-                    )}
+                        {/* Service Specific Details */}
+                        {service === "airport" && airportCfg && (
+                          <p className="text-sm text-slate-700 bg-blue-50 px-3 py-2 rounded-lg">
+                            Base {airportCfg.baseKm}
+                            {airportCfg.baseIsHours ? " (4h/40km)" : "km"} • Extra ₹
+                            {airportCfg.extraPerKm}/km • After{" "}
+                            {airportCfg.waitFreeMin /
+                              (airportCfg.baseIsHours ? 60 : 1)}
+                            {airportCfg.baseIsHours ? "h" : "m"}: ₹
+                            {airportCfg.waitPerMin}/min
+                          </p>
+                        )}
 
-                    {service === "local" && (
-                      <p className="text-[11px] sm:text-xs text-gray-700 mt-1">
-                        Includes base hours & kms • Extra km/hr as per car •
-                        Package: {packMeta?.packageKey || cityPackKey}
-                      </p>
-                    )}
+                        {service === "local" && (
+                          <p className="text-sm text-slate-700 bg-green-50 px-3 py-2 rounded-lg">
+                            Includes base hours & kms • Extra km/hr as per car • 
+                            Package: {packMeta?.packageKey || cityPackKey}
+                          </p>
+                        )}
 
-                    {service === "outstation" &&
-                      searchParams?.tripType === "oneway" && (
-                        <p className="text-[11px] sm:text-xs text-gray-700 mt-1">
-                          Min billable 100km • Extra as per car
-                        </p>
-                      )}
+                        {/* Fare Detail Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => setOpenId(isOpen ? null : car.id)}
+                          className="mt-3 text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1"
+                        >
+                          View Fare Details
+                          <span className="text-lg">{isOpen ? "▴" : "▾"}</span>
+                        </button>
+                      </div>
 
-                    {service === "outstation" &&
-                      searchParams?.tripType === "roundtrip" && (
-                        <p className="text-[11px] sm:text-xs text-gray-700 mt-1">
-                          Min {PRICE.roundtrip.dailyMinKm}km/day • ₹
-                          {PRICE.roundtrip.perKm[car.id]}/km • Driver ₹
-                          {premium(car.id)
-                            ? PRICE.roundtrip.driverAllowance.premium
-                            : PRICE.roundtrip.driverAllowance.default}
-                          /day
-                        </p>
-                      )}
-
-                    <button
-                      type="button"
-                      onClick={() => setOpenId(isOpen ? null : car.id)}
-                      className="mt-1.5 text-[11px] sm:text-xs font-medium text-rose-600 hover:text-rose-700"
-                    >
-                      View Fare Detail {isOpen ? "▴" : "▾"}
-                    </button>
-                  </div>
-
-                  {/* right price + green button */}
-                  <div className="text-right flex-shrink-0">
-                    <div className="text-lg sm:text-xl font-bold text-slate-900">
-                      ₹ {toFixedMoney(Math.round(displayTotal))}
-                    </div>
-                    <button
-                      onClick={() => {
-                        const payload = {
-                          carId: car.id,
-                          fare,
-                          service,
-                          km,
-                          arrivalDelayMin,
-                          days,
-                          ...(service === "local" && packMeta
-                            ? {
-                                packageKey: packMeta.packageKey,
-                                packageHours: packMeta.packageHours,
-                                packageKm: packMeta.packageKm,
-                              }
-                            : {}),
-                        };
-                        onSelect?.(payload);
-                      }}
-                      className="mt-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-md active:scale-[0.97] transition"
-                    >
-                      Book Now
-                    </button>
-                    <div className="text-[10px] text-gray-500 mt-1">
-                      ETA: {prettyDuration(arrivalDelayMin)}
+                      {/* Price and Book Button */}
+                      <div className="text-center lg:text-right flex-shrink-0">
+                        <div className="text-2xl lg:text-3xl font-bold text-slate-900 mb-3">
+                          ₹ {toFixedMoney(Math.round(displayTotal))}
+                        </div>
+                        <button
+                          onClick={() => {
+                            const payload = {
+                              carId: car.id,
+                              fare,
+                              service,
+                              km,
+                              arrivalDelayMin,
+                              days,
+                              ...(service === "local" && packMeta
+                                ? {
+                                    packageKey: packMeta.packageKey,
+                                    packageHours: packMeta.packageHours,
+                                    packageKm: packMeta.packageKm,
+                                  }
+                                : {}),
+                            };
+                            onSelect?.(payload);
+                          }}
+                          className="px-8 py-3 rounded-xl text-lg font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200"
+                        >
+                          Book Now
+                        </button>
+                        <div className="text-sm text-slate-500 mt-2">
+                          ETA: {prettyDuration(arrivalDelayMin)}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* expandable detail */}
+                {/* Expandable Details */}
                 {isOpen && (
-                  <div className="px-3 sm:px-4 pb-3 sm:pb-4 text-[12px] sm:text-sm text-gray-700 border-t bg-slate-50">
-                    <div className="py-2 sm:py-3">
+                  <div className="px-6 pb-6 border-t border-slate-200 bg-slate-50">
+                    <div className="pt-4">
+                      <h4 className="font-semibold text-slate-800 mb-3">Fare Breakdown:</h4>
+                      
                       {service === "airport" && (
-                        <>
-                          <div>
-                            Base ₹{airportCfg.baseFare} for {airportCfg.baseKm}
-                            {airportCfg.baseIsHours ? " (4h/40km)" : "km"} •
-                            Extra km: {fare.extraKm} × ₹
-                            {airportCfg.extraPerKm} = ₹
-                            {(
-                              fare.distanceFare - airportCfg.baseFare
-                            ).toLocaleString("en-IN")}
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between items-center p-3 bg-white rounded-lg border">
+                            <span>Base fare ({airportCfg.baseKm}km):</span>
+                            <span className="font-semibold">₹{airportCfg.baseFare}</span>
                           </div>
-                          {fare.waitFare > 0 && (
-                            <div>
-                              Waiting after free {airportCfg.waitFreeMin}
-                              {airportCfg.baseIsHours ? "min (4h)" : "min"}: ₹
-                              {fare.waitFare.toLocaleString("en-IN")}
+                          {fare.extraKm > 0 && (
+                            <div className="flex justify-between items-center p-3 bg-white rounded-lg border">
+                              <span>Extra km ({fare.extraKm} × ₹{airportCfg.extraPerKm}):</span>
+                              <span className="font-semibold">₹{(fare.extraKm * airportCfg.extraPerKm).toLocaleString("en-IN")}</span>
                             </div>
                           )}
-                          <div className="mt-1">
-                            Tolls/Parking extra at actuals.
-                          </div>
-                        </>
-                      )}
-
-                      {service === "outstation" &&
-                        searchParams?.tripType === "oneway" && (
-                          <>
-                            <div>
-                              Billable km: {fare.effectiveKm} (min{" "}
-                              {PRICE.oneway[car.id].baseKm})
+                          {fare.waitFare > 0 && (
+                            <div className="flex justify-between items-center p-3 bg-white rounded-lg border">
+                              <span>Waiting charges:</span>
+                              <span className="font-semibold">₹{fare.waitFare.toLocaleString("en-IN")}</span>
                             </div>
-                            {fare.extraKm > 0 && (
-                              <div>
-                                Extra km: {fare.extraKm} × ₹
-                                {PRICE.oneway[car.id].extraPerKm} = ₹
-                                {(
-                                  fare.extraKm *
-                                  PRICE.oneway[car.id].extraPerKm
-                                ).toLocaleString("en-IN")}
-                              </div>
-                            )}
-                          </>
-                        )}
-
-                      {service === "outstation" &&
-                        searchParams?.tripType === "roundtrip" && (
-                          <>
-                            <div>
-                              Days: {fare.days} • Actual km: {km || 0} •
-                              Billable km: {fare.billableKm} (min{" "}
-                              {PRICE.roundtrip.dailyMinKm}×{fare.days})
-                            </div>
-                            <div>
-                              Kilometer charges: {fare.billableKm} × ₹
-                              {fare.perKm} = ₹
-                              {fare.kmFare.toLocaleString("en-IN")}
-                            </div>
-                            <div>
-                              Driver allowance: ₹{fare.daPerDay}/day ×{" "}
-                              {fare.days} = ₹
-                              {fare.daTotal.toLocaleString("en-IN")}
-                            </div>
-                          </>
-                        )}
-
-                      {service === "local" && (
-                        <div>
-                          Billing from Pick-up to Pick-up • DA after 12am: ₹
-                          {PRICE.city.driverAllowanceAfterMidnight}
+                          )}
                         </div>
                       )}
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="bg-white rounded-xl p-3 border border-slate-200">
-                        <div className="font-semibold text-[12px]">
-                          Inclusions
+                      {/* Inclusions & Exclusions */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                        <div className="bg-white rounded-xl p-4 border border-green-200">
+                          <h5 className="font-semibold text-green-800 mb-2">✅ Inclusions</h5>
+                          <ul className="text-sm text-slate-700 space-y-1">
+                            <li>• Professional driver & clean A.C. cab</li>
+                            <li>• Base package / base km as per service</li>
+                            <li>• GST included if applicable</li>
+                            <li>• Fuel and driver charges</li>
+                          </ul>
                         </div>
-                        <ul className="mt-1.5 text-[11px] space-y-1 list-disc list-inside">
-                          <li>Professional driver & clean A.C. cab</li>
-                          <li>Base package / base km as per service</li>
-                          <li>GST included if applicable</li>
-                        </ul>
-                      </div>
-                      <div className="bg-white rounded-xl p-3 border border-slate-200">
-                        <div className="font-semibold text-[12px]">
-                          Exclusions
+                        <div className="bg-white rounded-xl p-4 border border-red-200">
+                          <h5 className="font-semibold text-red-800 mb-2">❌ Exclusions</h5>
+                          <ul className="text-sm text-slate-700 space-y-1">
+                            <li>• Toll, Parking, Inter-state entry tax</li>
+                            <li>• Extra km/hr beyond base limits</li>
+                            <li>• Night charges / Driver allowance</li>
+                            <li>• Any government taxes</li>
+                          </ul>
                         </div>
-                        <ul className="mt-1.5 text-[11px] space-y-1 list-disc list-inside">
-                          <li>Toll, Parking, Inter-state entry tax</li>
-                          <li>Extra km/hr beyond base limits</li>
-                          <li>
-                            Night charges / Driver allowance when applicable
-                          </li>
-                        </ul>
                       </div>
                     </div>
                   </div>
@@ -642,6 +603,13 @@ export default function Results({
               </div>
             );
           })}
+        </div>
+
+        {/* Footer Note */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-slate-600">
+            💰 All prices include GST • 🕒 24/7 customer support • 🚗 Well-maintained cars
+          </p>
         </div>
       </div>
     </section>
