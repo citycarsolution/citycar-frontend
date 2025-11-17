@@ -14,42 +14,7 @@ function debounce(fn, ms = 350) {
 
 /* India helpers */
 const IN_STATES = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-  "Delhi",
-  "Jammu and Kashmir",
-  "Ladakh",
-  "Puducherry",
-  "Chandigarh",
-  "Dadra and Nagar Haveli and Daman and Diu",
-  "Andaman and Nicobar Islands",
-  "Lakshadweep",
+  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry","Chandigarh","Dadra and Nagar Haveli and Daman and Diu","Andaman and Nicobar Islands","Lakshadweep",
 ];
 
 const isIndiaFeature = (p) => {
@@ -67,16 +32,8 @@ function normalizeIndiaLabel(p) {
 
   if (!city && state === "Maharashtra") {
     const admin = [
-      p.city,
-      p.town,
-      p.village,
-      p.county,
-      p.district,
-      p.state_district,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+      p.city, p.town, p.village, p.county, p.district, p.state_district,
+    ].filter(Boolean).join(" ").toLowerCase();
     if (/mumbai/.test(admin)) city = "Mumbai";
   }
   if (!city && state === "Maharashtra" && /(ward)/i.test(p.district || "")) {
@@ -92,11 +49,9 @@ async function photonSearch(q, limit = 8, lat = null, lon = null, signal = null)
   if (!q || q.trim().length < 2) return [];
   const cleanQuery = q.replace(/[^\w\s]/gi, "").trim();
   if (cleanQuery.length < 2) return [];
-  const query = `${cleanQuery} India`;
-  const urlBase = `${PHOTON_URL}?q=${encodeURIComponent(
-    query
-  )}&limit=${limit}&lang=en`;
-  const url = lat && lon ? `${urlBase}&lat=${lat}&lon=${lon}` : urlBase;
+  const query = ${cleanQuery} India;
+  const urlBase = ${PHOTON_URL}?q=${encodeURIComponent(query)}&limit=${limit}&lang=en;
+  const url = lat && lon ? ${urlBase}&lat=${lat}&lon=${lon} : urlBase;
 
   try {
     const res = await fetch(url, { signal });
@@ -110,7 +65,7 @@ async function photonSearch(q, limit = 8, lat = null, lon = null, signal = null)
         const n = normalizeIndiaLabel(p);
         const [lon0, lat0] = g.coordinates || [];
         return {
-          id: `${p.osm_id || Math.random()}`,
+          id: ${p.osm_id || Math.random()},
           label: n.label,
           name: n.name,
           city: n.city,
@@ -121,9 +76,7 @@ async function photonSearch(q, limit = 8, lat = null, lon = null, signal = null)
           type: p.type || p.category || "location",
         };
       });
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 /* curated local samples */
@@ -175,7 +128,8 @@ export default function Hero({ onSearch = () => {} }) {
   const [airportText, setAirportText] = useState("");
   const [selectedAirportItem, setSelectedAirportItem] = useState(null);
 
-  const [localPackage, setLocalPackage] = useState("8x80");
+  // NEW: package state for local
+  const [localPackage, setLocalPackage] = useState("8x80"); // default 8h/80km
 
   const [localDate, setLocalDate] = useState(todayISO);
   const [localTime, setLocalTime] = useState(defaultTime);
@@ -209,8 +163,13 @@ export default function Hero({ onSearch = () => {} }) {
   const toInputRef = useRef(null);
   const airportInputRef = useRef(null);
 
+<<<<<<< HEAD
+=======
+  // keep track of last-picked label to prevent immediate re-fetch reopening suggestions
+>>>>>>> def7345087d34115d5f08cc8e85cdc7c70508737
   const lastPickedRef = useRef({ pickup: null, to: null, airport: null, from: null });
 
+  // min return date
   const minReturnDate = useMemo(() => {
     if (tripType === "roundtrip" && outPickupDate) {
       const nextDay = new Date(outPickupDate);
@@ -225,16 +184,12 @@ export default function Hero({ onSearch = () => {} }) {
     () =>
       debounce(async (q, serviceType) => {
         if (!q || q.trim().length < 2) {
-          setPickupSug([]);
-          setPickupOpen(false);
-          return;
+          setPickupSug([]); setPickupOpen(false); return;
         }
         const qq = q.toLowerCase().trim();
 
-        if (
-          lastPickedRef.current.pickup &&
-          qq === lastPickedRef.current.pickup.toLowerCase()
-        ) {
+        // FIX: if this query was just set by a pick, skip re-fetch to avoid reopening suggestions
+        if (lastPickedRef.current.pickup && qq === lastPickedRef.current.pickup.toLowerCase()) {
           return;
         }
 
@@ -242,38 +197,29 @@ export default function Hero({ onSearch = () => {} }) {
         try {
           if (pickupController.current) pickupController.current.abort();
           pickupController.current = new AbortController();
-          const photon = await photonSearch(
-            q,
-            12,
-            null,
-            null,
-            pickupController.current.signal
-          );
+          const photon = await photonSearch(q, 12, null, null, pickupController.current.signal);
           const photonFormatted = photon.map((place, idx) => ({
             ...place,
-            id: `photon_${idx}_${place.id}`,
+            id: photon_${idx}_${place.id},
             icon: getPlaceIcon(place.label),
             service: serviceType,
           }));
           const localMatches = INDIAN_LOCATIONS.filter((place) =>
             place.toLowerCase().includes(qq)
-          )
-            .slice(0, 6)
-            .map((place, index) => {
-              const parts = place.split(",");
-              return {
-                id: `local_${index}_${place}`,
-                label: place,
-                name: parts[0],
-                city: parts[1]?.trim() || "",
-                state: parts[2]?.trim() || "",
-                type: "location",
-                icon: getPlaceIcon(place),
-                service: serviceType,
-                lat: null,
-                lon: null,
-              };
-            });
+          ).slice(0, 6).map((place, index) => {
+            const parts = place.split(",");
+            return {
+              id: local_${index}_${place},
+              label: place,
+              name: parts[0],
+              city: parts[1]?.trim() || "",
+              state: parts[2]?.trim() || "",
+              type: "location",
+              icon: getPlaceIcon(place),
+              service: serviceType,
+              lat: null, lon: null,
+            };
+          });
           combined = [...photonFormatted, ...localMatches];
           const seen = new Set();
           combined = combined.filter((it) => {
@@ -293,12 +239,14 @@ export default function Hero({ onSearch = () => {} }) {
     () =>
       debounce(async (q) => {
         if (!q || q.trim().length < 2) {
-          setToSug([]);
-          setToOpen(false);
-          return;
+          setToSug([]); setToOpen(false); return;
         }
         const qq = q.toLowerCase().trim();
 
+<<<<<<< HEAD
+=======
+        // FIX for drop input
+>>>>>>> def7345087d34115d5f08cc8e85cdc7c70508737
         if (lastPickedRef.current.to && qq === lastPickedRef.current.to.toLowerCase()) {
           return;
         }
@@ -307,38 +255,29 @@ export default function Hero({ onSearch = () => {} }) {
         try {
           if (toController.current) toController.current.abort();
           toController.current = new AbortController();
-          const photon = await photonSearch(
-            q,
-            12,
-            null,
-            null,
-            toController.current.signal
-          );
+          const photon = await photonSearch(q, 12, null, null, toController.current.signal);
           const photonFormatted = photon.map((place, idx) => ({
             ...place,
-            id: `photon_drop_${idx}_${place.id}`,
+            id: photon_drop_${idx}_${place.id},
             icon: getPlaceIcon(place.label),
             service: "airport",
           }));
           const localMatches = INDIAN_LOCATIONS.filter((place) =>
             place.toLowerCase().includes(qq)
-          )
-            .slice(0, 6)
-            .map((place, index) => {
-              const parts = place.split(",");
-              return {
-                id: `drop_${index}_${place}`,
-                label: place,
-                name: parts[0],
-                city: parts[1]?.trim() || "",
-                state: parts[2]?.trim() || "",
-                type: "location",
-                icon: getPlaceIcon(place),
-                service: "airport",
-                lat: null,
-                lon: null,
-              };
-            });
+          ).slice(0, 6).map((place, index) => {
+            const parts = place.split(",");
+            return {
+              id: drop_${index}_${place},
+              label: place,
+              name: parts[0],
+              city: parts[1]?.trim() || "",
+              state: parts[2]?.trim() || "",
+              type: "location",
+              icon: getPlaceIcon(place),
+              service: "airport",
+              lat: null, lon: null,
+            };
+          });
           combined = [...photonFormatted, ...localMatches];
           const seen = new Set();
           combined = combined.filter((it) => {
@@ -357,17 +296,11 @@ export default function Hero({ onSearch = () => {} }) {
   const fetchOutstationFrom = useMemo(
     () =>
       debounce((q) => {
-        if (!q || q.trim().length < 2) {
-          setFromSug([]);
-          setFromOpen(false);
-          return;
-        }
+        if (!q || q.trim().length < 2) { setFromSug([]); setFromOpen(false); return; }
         const qq = q.toLowerCase();
 
-        if (
-          lastPickedRef.current.from &&
-          qq === lastPickedRef.current.from.toLowerCase()
-        ) {
+        // FIX: avoid reopening suggestions if user just picked the same from-value
+        if (lastPickedRef.current.from && qq === lastPickedRef.current.from.toLowerCase()) {
           return;
         }
 
@@ -384,26 +317,16 @@ export default function Hero({ onSearch = () => {} }) {
   const fetchAirportSuggestions = useMemo(
     () =>
       debounce((q) => {
-        if (!q || q.trim().length < 2) {
-          setAirportSug([]);
-          setAirportOpen(false);
-          return;
-        }
+        if (!q || q.trim().length < 2) { setAirportSug([]); setAirportOpen(false); return; }
         const qq = q.toLowerCase();
 
-        if (
-          lastPickedRef.current.airport &&
-          qq === lastPickedRef.current.airport.toLowerCase()
-        ) {
+        // FIX for airport input
+        if (lastPickedRef.current.airport && qq === lastPickedRef.current.airport.toLowerCase()) {
           return;
         }
 
         const matches = (AIRPORTS || [])
-          .filter(
-            (a) =>
-              a.label?.toLowerCase()?.includes(qq) ||
-              a.id?.toLowerCase?.()?.includes(qq)
-          )
+          .filter((a) => a.label?.toLowerCase()?.includes(qq) || a.id?.toLowerCase?.()?.includes(qq))
           .slice(0, 30)
           .map((airport) => ({ ...airport, icon: "✈" }));
         setAirportSug(matches);
@@ -419,8 +342,7 @@ export default function Hero({ onSearch = () => {} }) {
     } else if (service === "airport" && airportMode === "drop") {
       fetchUniversalLocation(localPickup, "airport");
     } else {
-      setPickupSug([]);
-      setPickupOpen(false);
+      setPickupSug([]); setPickupOpen(false);
     }
   }, [localPickup, service, airportMode, fetchUniversalLocation]);
 
@@ -430,13 +352,13 @@ export default function Hero({ onSearch = () => {} }) {
 
   useEffect(() => {
     if (service === "outstation") {
-      if (!toVal || toVal.trim().length < 2) {
-        setToSug([]);
-        setToOpen(false);
-        return;
-      }
+      if (!toVal || toVal.trim().length < 2) { setToSug([]); setToOpen(false); return; }
       const qq = toVal.toLowerCase();
 
+<<<<<<< HEAD
+=======
+      // FIX: avoid reopening suggestions if user just picked the same to-value
+>>>>>>> def7345087d34115d5f08cc8e85cdc7c70508737
       if (lastPickedRef.current.to && qq === lastPickedRef.current.to.toLowerCase()) {
         return;
       }
@@ -445,13 +367,11 @@ export default function Hero({ onSearch = () => {} }) {
         .filter((c) => c.toLowerCase().includes(qq))
         .slice(0, 12)
         .map((c) => ({ id: c, label: c, type: "city", icon: "🏙" }));
-      setToSug(cityMatches);
-      setToOpen(cityMatches.length > 0);
+      setToSug(cityMatches); setToOpen(cityMatches.length > 0);
     } else if (service === "airport" && airportMode === "pickup") {
       fetchDropLocation(toVal);
     } else {
-      setToSug([]);
-      setToOpen(false);
+      setToSug([]); setToOpen(false);
     }
   }, [toVal, service, airportMode, fetchDropLocation]);
 
@@ -459,11 +379,11 @@ export default function Hero({ onSearch = () => {} }) {
     if (service === "airport") {
       fetchAirportSuggestions(airportText);
     } else {
-      setAirportSug([]);
-      setAirportOpen(false);
+      setAirportSug([]); setAirportOpen(false);
     }
   }, [airportText, service, fetchAirportSuggestions]);
 
+  // outside click: close all suggestion lists
   useEffect(() => {
     function handleClickOutside(e) {
       if (pickupListRef.current && !pickupListRef.current.contains(e.target))
@@ -484,8 +404,7 @@ export default function Hero({ onSearch = () => {} }) {
 
   async function enrichIfNoCoords(item) {
     if (!item) return item;
-    if (typeof item.lat === "number" && typeof item.lon === "number")
-      return item;
+    if (typeof item.lat === "number" && typeof item.lon === "number") return item;
     const q = item?.label || item?.name || "";
     if (!q) return item;
     try {
@@ -495,73 +414,47 @@ export default function Hero({ onSearch = () => {} }) {
     return item;
   }
 
+  // single-click select + BLUR inputs to hide suggestions firmly
   const pickLocal = async (item) => {
     const x = await enrichIfNoCoords(item);
-    setLocalPickup(x.label);
-    setSelectedLocalPlace(x);
-    setPickupSug([]);
-    setPickupOpen(false);
+    setLocalPickup(x.label); setSelectedLocalPlace(x);
+    setPickupSug([]); setPickupOpen(false);
+    // remember this pick so fetch won't re-open suggestions for same query
     lastPickedRef.current.pickup = x.label;
-    setTimeout(() => {
-      if (lastPickedRef.current.pickup === x.label)
-        lastPickedRef.current.pickup = null;
-    }, 700);
+    setTimeout(() => { if (lastPickedRef.current.pickup === x.label) lastPickedRef.current.pickup = null; }, 700);
     pickupInputRef.current?.blur();
   };
   const pickFrom = async (item) => {
     const x = await enrichIfNoCoords(item);
-    setFromVal(x.label);
-    setSelectedFromPlace(x);
-    setFromSug([]);
-    setFromOpen(false);
+    setFromVal(x.label); setSelectedFromPlace(x);
+    setFromSug([]); setFromOpen(false);
     lastPickedRef.current.from = x.label;
-    setTimeout(() => {
-      if (lastPickedRef.current.from === x.label)
-        lastPickedRef.current.from = null;
-    }, 700);
+    setTimeout(() => { if (lastPickedRef.current.from === x.label) lastPickedRef.current.from = null; }, 700);
     fromInputRef.current?.blur();
   };
   const pickTo = async (item) => {
     const x = await enrichIfNoCoords(item);
-    setToVal(x.label);
-    setSelectedToPlace(x);
-    setToSug([]);
-    setToOpen(false);
+    setToVal(x.label); setSelectedToPlace(x);
+    setToSug([]); setToOpen(false);
     lastPickedRef.current.to = x.label;
-    setTimeout(() => {
-      if (lastPickedRef.current.to === x.label)
-        lastPickedRef.current.to = null;
-    }, 700);
+    setTimeout(() => { if (lastPickedRef.current.to === x.label) lastPickedRef.current.to = null; }, 700);
     toInputRef.current?.blur();
   };
   const pickAirport = async (item) => {
     const x = await enrichIfNoCoords(item);
-    setAirportText(x.label);
-    setSelectedAirportItem(x);
-    setAirportSug([]);
-    setAirportOpen(false);
+    setAirportText(x.label); setSelectedAirportItem(x);
+    setAirportSug([]); setAirportOpen(false);
     lastPickedRef.current.airport = x.label;
-    setTimeout(() => {
-      if (lastPickedRef.current.airport === x.label)
-        lastPickedRef.current.airport = null;
-    }, 700);
+    setTimeout(() => { if (lastPickedRef.current.airport === x.label) lastPickedRef.current.airport = null; }, 700);
     airportInputRef.current?.blur();
   };
 
   const handleServiceChange = (newService) => {
     setService(newService);
-    setLocalPickup("");
-    setFromVal("");
-    setToVal("");
-    setAirportText("");
-    setSelectedLocalPlace(null);
-    setSelectedFromPlace(null);
-    setSelectedToPlace(null);
-    setSelectedAirportItem(null);
-    setPickupSug([]);
-    setFromSug([]);
-    setToSug([]);
-    setAirportSug([]);
+    setLocalPickup(""); setFromVal(""); setToVal(""); setAirportText("");
+    setSelectedLocalPlace(null); setSelectedFromPlace(null);
+    setSelectedToPlace(null); setSelectedAirportItem(null);
+    setPickupSug([]); setFromSug([]); setToSug([]); setAirportSug([]);
     setTripType("oneway");
   };
   const handleTripTypeChange = (type) => {
@@ -590,16 +483,13 @@ export default function Hero({ onSearch = () => {} }) {
         pickup: selectedLocalPlace || { label: localPickup },
         pickupDate: localDate,
         pickupTime: localTime,
-        package: localPackage,
-        packageId: localPackage,
+        package: localPackage,      // e.g. "12x120"
+        packageId: localPackage,    // compatibility alias
         packageHours: pkgHours,
         packageKm: pkgKm,
       };
     } else if (service === "outstation") {
-      if (!fromVal.trim() || !toVal.trim()) {
-        alert("Please enter both from and to locations");
-        return;
-      }
+      if (!fromVal.trim() || !toVal.trim()) { alert("Please enter both from and to locations"); return; }
       payload = {
         service: "outstation",
         tripType,
@@ -607,17 +497,11 @@ export default function Hero({ onSearch = () => {} }) {
         drop: selectedToPlace || { label: toVal },
         pickupDate: outPickupDate,
         pickupTime: outPickupTime,
-        ...(tripType === "roundtrip" && {
-          returnDate: outReturnDate,
-          returnTime: outReturnTime,
-        }),
+        ...(tripType === "roundtrip" && { returnDate: outReturnDate, returnTime: outReturnTime }),
       };
     } else if (service === "airport") {
       if (airportMode === "drop") {
-        if (!localPickup.trim() || !airportText.trim()) {
-          alert("Please enter both pickup location and airport");
-          return;
-        }
+        if (!localPickup.trim() || !airportText.trim()) { alert("Please enter both pickup location and airport"); return; }
         payload = {
           service: "airport",
           airportMode: "drop",
@@ -627,10 +511,7 @@ export default function Hero({ onSearch = () => {} }) {
           pickupTime: airportTime,
         };
       } else {
-        if (!airportText.trim() || !toVal.trim()) {
-          alert("Please enter both airport and drop location");
-          return;
-        }
+        if (!airportText.trim() || !toVal.trim()) { alert("Please enter both airport and drop location"); return; }
         payload = {
           service: "airport",
           airportMode: "pickup",
@@ -642,9 +523,8 @@ export default function Hero({ onSearch = () => {} }) {
       }
     }
     if (payload) {
-      try {
-        console.log("SEARCH_PAYLOAD:", payload);
-      } catch {}
+      // debug: show exact payload sent to Results / parent
+      try { console.log("SEARCH_PAYLOAD:", payload); } catch (e) {}
       onSearch(payload);
     }
   };
@@ -653,9 +533,7 @@ export default function Hero({ onSearch = () => {} }) {
     <section className="relative w-full min-h-[700px] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* background video */}
       <video
-        className={`absolute inset-0 w-full h-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${
-          videoReady ? "opacity-100" : "opacity-0"
-        }`}
+        className={absolute inset-0 w-full h-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${videoReady ? "opacity-100" : "opacity-0"}}
         autoPlay
         muted
         loop
@@ -1205,8 +1083,36 @@ export default function Hero({ onSearch = () => {} }) {
                             </ul>
                           )}
                         </div>
-                      </>
-                    )}
+                        {toOpen && toSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-gray-200 z-50 text-[13px]">
+                            {toSug.map((sug) => (
+                              <li
+                                key={sug.id}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  pickTo(sug);
+                                }}
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              >
+                                <span className="text-xl flex-shrink-0">
+                                  {getPlaceIcon(sug.label)}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-gray-800 font-medium truncate">
+                                    {sug.name || sug.label}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500 truncate">
+                                    {sug.city && <span>{sug.city}</span>}
+                                    {sug.state && <span>, {sug.state}</span>}
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </>cd D:\citycarsolution\citycar-solution\frontend
+
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -1257,5 +1163,5 @@ export default function Hero({ onSearch = () => {} }) {
         </div>
       </div>
     </section>
-  );
+  );
 }
