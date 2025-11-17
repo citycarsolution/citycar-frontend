@@ -3,10 +3,10 @@ import React, { useEffect, useMemo, useState } from "react";
 
 const PRICE = {
   airport: {
-    sedan:  { baseKm: 10, baseFare: 650,  extraPerKm: 15, waitFreeMin: 60,  waitPerMin: 2 },
-    ertiga: { baseKm: 10, baseFare: 850,  extraPerKm: 18, waitFreeMin: 60,  waitPerMin: 3 },
-    carens: { baseKm: 10, baseFare: 850,  extraPerKm: 20, waitFreeMin: 60,  waitPerMin: 3 },
-    crysta: { baseKm: 40, baseFare: 2250, extraPerKm: 22, waitFreeMin: 240, waitPerMin: 5, baseIsHours: true },
+    sedan:  { baseKm: 10, baseFare: 750,  extraPerKm: 15, waitFreeMin: 60,  waitPerMin: 2.5 },
+    ertiga: { baseKm: 10, baseFare: 1050,  extraPerKm: 18, waitFreeMin: 60,  waitPerMin: 3.5 },
+    carens: { baseKm: 10, baseFare: 1250,  extraPerKm: 20, waitFreeMin: 60,  waitPerMin: 3 },
+    crysta: { baseKm: 40, baseFare: 2250, extraPerKm: 25, waitFreeMin: 240, waitPerMin: 5, baseIsHours: true },
     note: "Billing from Pick-up to Pick-up. Toll & parking extra.",
   },
   city: {
