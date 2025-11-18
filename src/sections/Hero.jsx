@@ -1,4 +1,3 @@
-// src/sections/Hero.jsx
 import React, {
   useEffect,
   useMemo,
@@ -10,7 +9,7 @@ import { AIRPORTS } from "../data/airportsData";
 
 const PHOTON_URL = "https://photon.komoot.io/api/";
 
-/* ------------- helpers ------------- */
+/* ------------ small helpers ------------- */
 
 function debounce(fn, ms = 350) {
   let t;
@@ -74,7 +73,7 @@ function normalizeIndiaLabel(p) {
   let city =
     p.city || p.town || p.village || p.suburb || "";
 
-  // special case Mumbai
+  // mumbai special-case
   if (!city && state === "Maharashtra") {
     const admin = [
       p.city,
@@ -99,9 +98,7 @@ function normalizeIndiaLabel(p) {
 
   const name =
     p.name || p.street || p.suburb || city || "";
-  const parts = [name, city, state, "India"].filter(
-    Boolean
-  );
+  const parts = [name, city, state, "India"].filter(Boolean);
   return {
     label: parts.join(", "),
     name,
@@ -135,6 +132,7 @@ async function photonSearch(
     const res = await fetch(url, { signal });
     if (!res.ok) return [];
     const json = await res.json();
+
     return (json.features || [])
       .filter((f) => isIndiaFeature(f.properties))
       .map((f) => {
@@ -154,7 +152,7 @@ async function photonSearch(
           type: p.type || p.category || "location",
         };
       });
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -199,40 +197,39 @@ const getPlaceIcon = (place = "") => {
   return "📍";
 };
 
-/* ------------- COMPONENT ------------- */
+/* ================= HERO COMPONENT ================= */
 
 export default function Hero({ onSearch = () => {} }) {
-  /* basic state */
-  const [service, setService] = useState("local"); // local | outstation | airport
+  const [service, setService] = useState("local");
   const [airportMode, setAirportMode] =
-    useState("drop"); // drop | pickup
+    useState("drop");
   const [tripType, setTripType] =
-    useState("oneway"); // oneway | roundtrip
-  const [videoReady, setVideoReady] = useState(false);
+    useState("oneway");
+  const [videoReady, setVideoReady] =
+    useState(false);
 
-  // current date + next hour time
   const todayISO = new Date()
     .toISOString()
     .split("T")[0];
   const defaultTime = new Date(
-    Date.now() + 60 * 60 * 1000
+    Date.now() + 3600000
   )
     .toTimeString()
     .slice(0, 5);
 
-  /* form state */
-  const [localPickup, setLocalPickup] = useState("");
+  // form state
+  const [localPickup, setLocalPickup] =
+    useState("");
   const [selectedLocalPlace, setSelectedLocalPlace] =
     useState(null);
-
   const [fromVal, setFromVal] = useState("");
   const [toVal, setToVal] = useState("");
   const [selectedFromPlace, setSelectedFromPlace] =
     useState(null);
   const [selectedToPlace, setSelectedToPlace] =
     useState(null);
-
-  const [airportText, setAirportText] = useState("");
+  const [airportText, setAirportText] =
+    useState("");
   const [selectedAirportItem, setSelectedAirportItem] =
     useState(null);
 
@@ -243,7 +240,6 @@ export default function Hero({ onSearch = () => {} }) {
     useState(todayISO);
   const [localTime, setLocalTime] =
     useState(defaultTime);
-
   const [outPickupDate, setOutPickupDate] =
     useState(todayISO);
   const [outPickupTime, setOutPickupTime] =
@@ -252,39 +248,37 @@ export default function Hero({ onSearch = () => {} }) {
     useState(todayISO);
   const [outReturnTime, setOutReturnTime] =
     useState(defaultTime);
-
   const [airportDate, setAirportDate] =
     useState(todayISO);
   const [airportTime, setAirportTime] =
     useState(defaultTime);
 
-  /* suggestions */
+  // suggestions
   const [pickupSug, setPickupSug] = useState([]);
   const [fromSug, setFromSug] = useState([]);
   const [toSug, setToSug] = useState([]);
-  const [airportSug, setAirportSug] = useState([]);
+  const [airportSug, setAirportSug] =
+    useState([]);
 
-  const [pickupOpen, setPickupOpen] = useState(false);
+  const [pickupOpen, setPickupOpen] =
+    useState(false);
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
   const [airportOpen, setAirportOpen] =
     useState(false);
 
-  /* refs */
+  // refs for xhr + dropdown
   const pickupController = useRef(null);
   const toController = useRef(null);
-
   const pickupListRef = useRef(null);
   const fromListRef = useRef(null);
   const toListRef = useRef(null);
   const airportListRef = useRef(null);
-
   const pickupInputRef = useRef(null);
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
   const airportInputRef = useRef(null);
 
-  // to avoid suggestions opening again immediately
   const lastPickedRef = useRef({
     pickup: null,
     to: null,
@@ -301,7 +295,7 @@ export default function Hero({ onSearch = () => {} }) {
     return todayISO;
   }, [outPickupDate, tripType, todayISO]);
 
-  /* ------------- fetchers ------------- */
+  /* ------------------- fetchers ------------------- */
 
   const fetchUniversalLocation = useMemo(
     () =>
@@ -327,7 +321,6 @@ export default function Hero({ onSearch = () => {} }) {
             pickupController.current.abort();
           pickupController.current =
             new AbortController();
-
           const photon = await photonSearch(
             q,
             12,
@@ -343,11 +336,10 @@ export default function Hero({ onSearch = () => {} }) {
               service: serviceType,
             })
           );
-
-          const localMatches = INDIAN_LOCATIONS
-            .filter((place) =>
+          const localMatches = INDIAN_LOCATIONS.filter(
+            (place) =>
               place.toLowerCase().includes(qq)
-            )
+          )
             .slice(0, 6)
             .map((place, index) => {
               const parts = place.split(",");
@@ -366,7 +358,6 @@ export default function Hero({ onSearch = () => {} }) {
             });
 
           combined = [...photonFormatted, ...localMatches];
-
           const seen = new Set();
           combined = combined.filter((it) => {
             const key = (it.label || "").toLowerCase();
@@ -374,7 +365,7 @@ export default function Hero({ onSearch = () => {} }) {
             seen.add(key);
             return true;
           });
-        } catch (e) {
+        } catch {
           // ignore
         }
 
@@ -396,7 +387,8 @@ export default function Hero({ onSearch = () => {} }) {
 
         if (
           lastPickedRef.current.to &&
-          qq === lastPickedRef.current.to.toLowerCase()
+          qq ===
+            lastPickedRef.current.to.toLowerCase()
         ) {
           return;
         }
@@ -406,7 +398,6 @@ export default function Hero({ onSearch = () => {} }) {
           if (toController.current)
             toController.current.abort();
           toController.current = new AbortController();
-
           const photon = await photonSearch(
             q,
             12,
@@ -422,11 +413,10 @@ export default function Hero({ onSearch = () => {} }) {
               service: "airport",
             })
           );
-
-          const localMatches = INDIAN_LOCATIONS
-            .filter((place) =>
+          const localMatches = INDIAN_LOCATIONS.filter(
+            (place) =>
               place.toLowerCase().includes(qq)
-            )
+          )
             .slice(0, 6)
             .map((place, index) => {
               const parts = place.split(",");
@@ -445,7 +435,6 @@ export default function Hero({ onSearch = () => {} }) {
             });
 
           combined = [...photonFormatted, ...localMatches];
-
           const seen = new Set();
           combined = combined.filter((it) => {
             const key = (it.label || "").toLowerCase();
@@ -453,7 +442,7 @@ export default function Hero({ onSearch = () => {} }) {
             seen.add(key);
             return true;
           });
-        } catch (e) {
+        } catch {
           // ignore
         }
 
@@ -490,7 +479,6 @@ export default function Hero({ onSearch = () => {} }) {
             type: "city",
             icon: "🏙",
           }));
-
         setFromSug(cityMatches);
         setFromOpen(cityMatches.length > 0);
       }, 300),
@@ -533,7 +521,7 @@ export default function Hero({ onSearch = () => {} }) {
     []
   );
 
-  /* ------------- Effects ------------- */
+  /* ------------------- effects ------------------- */
 
   useEffect(() => {
     if (service === "local") {
@@ -571,7 +559,8 @@ export default function Hero({ onSearch = () => {} }) {
 
       if (
         lastPickedRef.current.to &&
-        qq === lastPickedRef.current.to.toLowerCase()
+        qq ===
+          lastPickedRef.current.to.toLowerCase()
       ) {
         return;
       }
@@ -651,8 +640,6 @@ export default function Hero({ onSearch = () => {} }) {
       );
   }, []);
 
-  /* ------------- pick helpers ------------- */
-
   async function enrichIfNoCoords(item) {
     if (!item) return item;
     if (
@@ -664,18 +651,19 @@ export default function Hero({ onSearch = () => {} }) {
     if (!q) return item;
     try {
       const best = (await photonSearch(q, 1))?.[0];
-      if (best) {
+      if (best)
         return {
           ...item,
           lat: best.lat,
           lon: best.lon,
         };
-      }
-    } catch (e) {
+    } catch {
       // ignore
     }
     return item;
   }
+
+  /* ---------- pick helpers ---------- */
 
   const pickLocal = async (item) => {
     const x = await enrichIfNoCoords(item);
@@ -683,16 +671,13 @@ export default function Hero({ onSearch = () => {} }) {
     setSelectedLocalPlace(x);
     setPickupSug([]);
     setPickupOpen(false);
-
     lastPickedRef.current.pickup = x.label;
     setTimeout(() => {
       if (
         lastPickedRef.current.pickup === x.label
-      ) {
+      )
         lastPickedRef.current.pickup = null;
-      }
     }, 700);
-
     pickupInputRef.current?.blur();
   };
 
@@ -702,16 +687,13 @@ export default function Hero({ onSearch = () => {} }) {
     setSelectedFromPlace(x);
     setFromSug([]);
     setFromOpen(false);
-
     lastPickedRef.current.from = x.label;
     setTimeout(() => {
       if (
         lastPickedRef.current.from === x.label
-      ) {
+      )
         lastPickedRef.current.from = null;
-      }
     }, 700);
-
     fromInputRef.current?.blur();
   };
 
@@ -721,16 +703,13 @@ export default function Hero({ onSearch = () => {} }) {
     setSelectedToPlace(x);
     setToSug([]);
     setToOpen(false);
-
     lastPickedRef.current.to = x.label;
     setTimeout(() => {
       if (
         lastPickedRef.current.to === x.label
-      ) {
+      )
         lastPickedRef.current.to = null;
-      }
     }, 700);
-
     toInputRef.current?.blur();
   };
 
@@ -740,39 +719,32 @@ export default function Hero({ onSearch = () => {} }) {
     setSelectedAirportItem(x);
     setAirportSug([]);
     setAirportOpen(false);
-
     lastPickedRef.current.airport = x.label;
     setTimeout(() => {
       if (
         lastPickedRef.current.airport === x.label
-      ) {
+      )
         lastPickedRef.current.airport = null;
-      }
     }, 700);
-
     airportInputRef.current?.blur();
   };
 
-  /* ------------- handlers ------------- */
+  /* ---------- handlers ---------- */
 
   const handleServiceChange = (newService) => {
     setService(newService);
-
     setLocalPickup("");
     setFromVal("");
     setToVal("");
     setAirportText("");
-
     setSelectedLocalPlace(null);
     setSelectedFromPlace(null);
     setSelectedToPlace(null);
     setSelectedAirportItem(null);
-
     setPickupSug([]);
     setFromSug([]);
     setToSug([]);
     setAirportSug([]);
-
     setTripType("oneway");
   };
 
@@ -809,7 +781,9 @@ export default function Hero({ onSearch = () => {} }) {
       payload = {
         service: "local",
         pickup:
-          selectedLocalPlace || { label: localPickup },
+          selectedLocalPlace || {
+            label: localPickup,
+          },
         pickupDate: localDate,
         pickupTime: localTime,
         package: localPackage,
@@ -828,8 +802,11 @@ export default function Hero({ onSearch = () => {} }) {
         service: "outstation",
         tripType,
         pickup:
-          selectedFromPlace || { label: fromVal },
-        drop: selectedToPlace || { label: toVal },
+          selectedFromPlace || {
+            label: fromVal,
+          },
+        drop:
+          selectedToPlace || { label: toVal },
         pickupDate: outPickupDate,
         pickupTime: outPickupTime,
         ...(tripType === "roundtrip" && {
@@ -863,7 +840,10 @@ export default function Hero({ onSearch = () => {} }) {
           pickupTime: airportTime,
         };
       } else {
-        if (!airportText.trim() || !toVal.trim()) {
+        if (
+          !airportText.trim() ||
+          !toVal.trim()
+        ) {
           alert(
             "Please enter both airport and drop location"
           );
@@ -876,7 +856,8 @@ export default function Hero({ onSearch = () => {} }) {
             selectedAirportItem || {
               label: airportText,
             },
-          drop: selectedToPlace || { label: toVal },
+          drop:
+            selectedToPlace || { label: toVal },
           pickupDate: airportDate,
           pickupTime: airportTime,
         };
@@ -886,18 +867,18 @@ export default function Hero({ onSearch = () => {} }) {
     if (payload) {
       try {
         console.log("SEARCH_PAYLOAD:", payload);
-      } catch (e) {}
+      } catch {}
       onSearch(payload);
     }
   };
 
-  /* ------------- UI ------------- */
+  /* ================= UI ================= */
 
   return (
-    <section className="relative w-full min-h-[680px] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
+    <section className="relative w-full min-h-[420px] md:min-h-[480px] flex items-center justify-center overflow-hidden">
       {/* background video */}
       <video
-        className={`absolute inset-0 w-full h-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${
+        className={`absolute inset-0 h-full w-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${
           videoReady ? "opacity-100" : "opacity-0"
         }`}
         autoPlay
@@ -915,72 +896,59 @@ export default function Hero({ onSearch = () => {} }) {
       </video>
 
       {/* dark overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90 z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/85 z-10 pointer-events-none" />
 
       {/* content */}
-      <div className="relative z-20 w-full max-w-6xl mx-auto px-4 sm:px-6">
-        {/* heading */}
-        <div className="text-center mb-6 sm:mb-8">
-          <p className="text-xs sm:text-sm uppercase tracking-[0.25em] text-sky-200/90">
-            Book cab online
-          </p>
-          <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-semibold text-white">
-            Local, Outstation & Airport Cabs in{" "}
-            <span className="text-emerald-400">
-              One Place
-            </span>
-          </h2>
-        </div>
-
-        {/* gradient bar like your laptop design */}
-        <div className="bg-gradient-to-r from-[#4c1d95] via-[#4338ca] to-[#0ea5e9] rounded-2xl p-[1px] shadow-[0_18px_60px_rgba(15,23,42,0.9)]">
-          <div className="bg-slate-950/85 rounded-2xl px-3 sm:px-5 py-4 sm:py-5">
-            {/* top row: tabs */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+      <div className="relative z-20 w-full px-3 md:px-6 lg:px-10 py-10 md:py-16">
+        <div className="mx-auto max-w-6xl rounded-3xl bg-slate-900/80 border border-white/10 backdrop-blur-xl shadow-[0_40px_80px_rgba(0,0,0,0.9)] px-4 py-5 md:px-8 md:py-8 text-white">
+          {/* tabs row */}
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() =>
                   handleServiceChange("local")
                 }
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-medium shadow-sm transition-all ${
+                className={`px-5 py-2 rounded-full text-sm font-medium border transition-all ${
                   service === "local"
-                    ? "bg-white text-sky-700 shadow-[0_8px_24px_rgba(248,250,252,0.9)]"
-                    : "bg-white/5 text-slate-100 border border-white/15 hover:bg-white/10"
+                    ? "bg-white text-slate-900 border-white shadow-lg"
+                    : "bg-slate-800/60 text-white/80 border-slate-600 hover:bg-slate-700"
                 }`}
               >
-                🏙 Local Rentals
+                Local Rentals
               </button>
               <button
                 type="button"
                 onClick={() =>
                   handleServiceChange("outstation")
                 }
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-medium shadow-sm transition-all ${
+                className={`px-5 py-2 rounded-full text-sm font-medium border transition-all ${
                   service === "outstation"
-                    ? "bg-white text-sky-700 shadow-[0_8px_24px_rgba(248,250,252,0.9)]"
-                    : "bg-white/5 text-slate-100 border border-white/15 hover:bg-white/10"
+                    ? "bg-white text-slate-900 border-white shadow-lg"
+                    : "bg-slate-800/60 text-white/80 border-slate-600 hover:bg-slate-700"
                 }`}
               >
-                🚗 Outstation
+                Outstation
               </button>
               <button
                 type="button"
                 onClick={() =>
                   handleServiceChange("airport")
                 }
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-medium shadow-sm transition-all ${
+                className={`px-5 py-2 rounded-full text-sm font-medium border transition-all ${
                   service === "airport"
-                    ? "bg-white text-sky-700 shadow-[0_8px_24px_rgba(248,250,252,0.9)]"
-                    : "bg-white/5 text-slate-100 border border-white/15 hover:bg-white/10"
+                    ? "bg-white text-slate-900 border-white shadow-lg"
+                    : "bg-slate-800/60 text-white/80 border-slate-600 hover:bg-slate-700"
                 }`}
               >
-                ✈ Airport Transfer
+                Airport Transfer
               </button>
+            </div>
 
-              {/* right side small toggles */}
-              <div className="flex-1" />
+            {/* right side toggles */}
+            <div className="ml-auto flex flex-wrap gap-2 text-xs md:text-sm">
               {service === "outstation" && (
-                <div className="flex items-center gap-2 text-[11px] sm:text-xs">
+                <>
                   <button
                     type="button"
                     onClick={() =>
@@ -988,8 +956,8 @@ export default function Hero({ onSearch = () => {} }) {
                     }
                     className={`px-3 py-1.5 rounded-full border transition-all ${
                       tripType === "oneway"
-                        ? "bg-emerald-400 text-slate-900 border-emerald-300"
-                        : "bg-white/5 text-slate-100 border-white/20 hover:bg-white/10"
+                        ? "bg-sky-500 text-white border-sky-400"
+                        : "bg-slate-800/60 text-white/80 border-slate-600 hover:bg-slate-700"
                     }`}
                   >
                     🚗 One Way
@@ -997,21 +965,23 @@ export default function Hero({ onSearch = () => {} }) {
                   <button
                     type="button"
                     onClick={() =>
-                      handleTripTypeChange("roundtrip")
+                      handleTripTypeChange(
+                        "roundtrip"
+                      )
                     }
                     className={`px-3 py-1.5 rounded-full border transition-all ${
                       tripType === "roundtrip"
-                        ? "bg-emerald-400 text-slate-900 border-emerald-300"
-                        : "bg-white/5 text-slate-100 border-white/20 hover:bg-white/10"
+                        ? "bg-sky-500 text-white border-sky-400"
+                        : "bg-slate-800/60 text-white/80 border-slate-600 hover:bg-slate-700"
                     }`}
                   >
                     🔄 Round Trip
                   </button>
-                </div>
+                </>
               )}
 
               {service === "airport" && (
-                <div className="flex items-center gap-2 text-[11px] sm:text-xs">
+                <>
                   <button
                     type="button"
                     onClick={() => {
@@ -1023,8 +993,8 @@ export default function Hero({ onSearch = () => {} }) {
                     }}
                     className={`px-3 py-1.5 rounded-full border transition-all ${
                       airportMode === "drop"
-                        ? "bg-emerald-400 text-slate-900 border-emerald-300"
-                        : "bg-white/5 text-slate-100 border-white/20 hover:bg-white/10"
+                        ? "bg-sky-500 text-white border-sky-400"
+                        : "bg-slate-800/60 text-white/80 border-slate-600 hover:bg-slate-700"
                     }`}
                   >
                     🚗 Drop to Airport
@@ -1040,46 +1010,59 @@ export default function Hero({ onSearch = () => {} }) {
                     }}
                     className={`px-3 py-1.5 rounded-full border transition-all ${
                       airportMode === "pickup"
-                        ? "bg-emerald-400 text-slate-900 border-emerald-300"
-                        : "bg-white/5 text-slate-100 border-white/20 hover:bg-white/10"
+                        ? "bg-sky-500 text-white border-sky-400"
+                        : "bg-slate-800/60 text-white/80 border-slate-600 hover:bg-slate-700"
                     }`}
                   >
                     🛬 Pickup from Airport
                   </button>
-                </div>
+                </>
               )}
             </div>
+          </div>
 
-            {/* FORM – desktop one-row like your ref, mobile stacked */}
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-4 text-xs sm:text-sm text-white"
-            >
-              {/* LOCAL */}
-              {service === "local" && (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          {/* sub heading */}
+          <h2 className="text-lg md:text-xl font-semibold mb-4">
+            {service === "local"
+              ? "Local Rentals"
+              : service === "outstation"
+              ? "Outstation Trip"
+              : "Airport Transfer"}
+          </h2>
+
+          {/* ------------- FORM ------------- */}
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
+            {/* LOCAL */}
+            {service === "local" && (
+              <>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,1.3fr)_minmax(0,1.3fr)_minmax(0,1.3fr)] items-end">
                   {/* pickup */}
                   <div
-                    className="md:col-span-4 relative"
+                    className="relative"
                     ref={pickupListRef}
                   >
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
-                      From
-                    </div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
+                      Pickup Location (India)
+                    </label>
                     <input
                       ref={pickupInputRef}
                       type="text"
                       value={localPickup}
                       onChange={(e) => {
                         setSelectedLocalPlace(null);
-                        setLocalPickup(e.target.value);
+                        setLocalPickup(
+                          e.target.value
+                        );
                       }}
                       placeholder="City, locality, hotel, office..."
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                     {pickupOpen &&
                       pickupSug.length > 0 && (
-                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-50 text-xs">
+                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-50 text-sm">
                           {pickupSug.map((sug) => (
                             <li
                               key={sug.id}
@@ -1087,9 +1070,9 @@ export default function Hero({ onSearch = () => {} }) {
                                 e.preventDefault();
                                 pickLocal(sug);
                               }}
-                              className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
                             >
-                              <span className="text-lg">
+                              <span className="text-xl flex-shrink-0">
                                 {getPlaceIcon(
                                   sug.label
                                 )}
@@ -1107,7 +1090,10 @@ export default function Hero({ onSearch = () => {} }) {
                                   )}
                                   {sug.state && (
                                     <span>
-                                      , {sug.state}
+                                      {sug.city
+                                        ? ", "
+                                        : ""}
+                                      {sug.state}
                                     </span>
                                   )}
                                 </div>
@@ -1119,10 +1105,10 @@ export default function Hero({ onSearch = () => {} }) {
                   </div>
 
                   {/* package */}
-                  <div className="md:col-span-2">
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                  <div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       Package
-                    </div>
+                    </label>
                     <select
                       value={localPackage}
                       onChange={(e) =>
@@ -1130,7 +1116,7 @@ export default function Hero({ onSearch = () => {} }) {
                           e.target.value
                         )
                       }
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     >
                       <option value="8x80">
                         8 Hours / 80 Km
@@ -1145,10 +1131,10 @@ export default function Hero({ onSearch = () => {} }) {
                   </div>
 
                   {/* date */}
-                  <div className="md:col-span-3">
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                  <div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       Pickup Date
-                    </div>
+                    </label>
                     <input
                       type="date"
                       value={localDate}
@@ -1156,48 +1142,40 @@ export default function Hero({ onSearch = () => {} }) {
                       onChange={(e) =>
                         setLocalDate(e.target.value)
                       }
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                   </div>
 
                   {/* time */}
-                  <div className="md:col-span-2">
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                  <div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       Pickup Time
-                    </div>
+                    </label>
                     <input
                       type="time"
                       value={localTime}
                       onChange={(e) =>
                         setLocalTime(e.target.value)
                       }
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                   </div>
-
-                  {/* button */}
-                  <div className="md:col-span-1 flex">
-                    <button
-                      type="submit"
-                      className="w-full h-[44px] mt-2 md:mt-5 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold text-xs sm:text-sm shadow-[0_10px_30px_rgba(16,185,129,0.7)] hover:from-emerald-600 hover:to-green-600 active:scale-[0.97] transition"
-                    >
-                      🔍 SEARCH LOCAL CABS
-                    </button>
-                  </div>
                 </div>
-              )}
+              </>
+            )}
 
-              {/* OUTSTATION */}
-              {service === "outstation" && (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            {/* OUTSTATION */}
+            {service === "outstation" && (
+              <>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,2.2fr)_minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1.3fr)] items-end">
                   {/* from */}
                   <div
-                    className="md:col-span-3 relative"
+                    className="relative"
                     ref={fromListRef}
                   >
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       From City (India)
-                    </div>
+                    </label>
                     <input
                       ref={fromInputRef}
                       type="text"
@@ -1207,11 +1185,11 @@ export default function Hero({ onSearch = () => {} }) {
                         setFromVal(e.target.value);
                       }}
                       placeholder="Source city"
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                     {fromOpen &&
                       fromSug.length > 0 && (
-                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-50 text-xs">
+                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-50 text-sm">
                           {fromSug.map((sug) => (
                             <li
                               key={sug.id}
@@ -1219,9 +1197,9 @@ export default function Hero({ onSearch = () => {} }) {
                                 e.preventDefault();
                                 pickFrom(sug);
                               }}
-                              className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
                             >
-                              <span className="text-lg">
+                              <span className="text-xl">
                                 🏙
                               </span>
                               <div className="text-gray-800 font-medium">
@@ -1235,12 +1213,12 @@ export default function Hero({ onSearch = () => {} }) {
 
                   {/* to */}
                   <div
-                    className="md:col-span-3 relative"
+                    className="relative"
                     ref={toListRef}
                   >
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       To City (India)
-                    </div>
+                    </label>
                     <input
                       ref={toInputRef}
                       type="text"
@@ -1250,38 +1228,39 @@ export default function Hero({ onSearch = () => {} }) {
                         setToVal(e.target.value);
                       }}
                       placeholder="Destination city"
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
-                    {toOpen && toSug.length > 0 && (
-                      <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-50 text-xs">
-                        {toSug.map((sug) => (
-                          <li
-                            key={sug.id}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              pickTo(sug);
-                            }}
-                            className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                          >
-                            <span className="text-lg">
-                              🏙
-                            </span>
-                            <div className="text-gray-800 font-medium">
-                              {sug.label}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {toOpen &&
+                      toSug.length > 0 && (
+                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-50 text-sm">
+                          {toSug.map((sug) => (
+                            <li
+                              key={sug.id}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                pickTo(sug);
+                              }}
+                              className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                            >
+                              <span className="text-xl">
+                                🏙
+                              </span>
+                              <div className="text-gray-800 font-medium">
+                                {sug.label}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                   </div>
 
-                  {/* pickup date */}
-                  <div className="md:col-span-2">
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                  {/* date */}
+                  <div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       {tripType === "oneway"
                         ? "Pickup Date"
                         : "Departure Date"}
-                    </div>
+                    </label>
                     <input
                       type="date"
                       value={outPickupDate}
@@ -1291,17 +1270,17 @@ export default function Hero({ onSearch = () => {} }) {
                           e.target.value
                         )
                       }
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                   </div>
 
-                  {/* pickup time */}
-                  <div className="md:col-span-2">
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                  {/* time */}
+                  <div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       {tripType === "oneway"
                         ? "Pickup Time"
                         : "Departure Time"}
-                    </div>
+                    </label>
                     <input
                       type="time"
                       value={outPickupTime}
@@ -1310,74 +1289,63 @@ export default function Hero({ onSearch = () => {} }) {
                           e.target.value
                         )
                       }
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                   </div>
-
-                  {/* optional return */}
-                  {tripType === "roundtrip" && (
-                    <>
-                      <div className="md:col-span-2">
-                        <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
-                          Return Date
-                        </div>
-                        <input
-                          type="date"
-                          value={outReturnDate}
-                          min={minReturnDate}
-                          onChange={(e) =>
-                            setOutReturnDate(
-                              e.target.value
-                            )
-                          }
-                          className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
-                          Return Time
-                        </div>
-                        <input
-                          type="time"
-                          value={outReturnTime}
-                          onChange={(e) =>
-                            setOutReturnTime(
-                              e.target.value
-                            )
-                          }
-                          className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  {/* button */}
-                  <div className="md:col-span-2 flex">
-                    <button
-                      type="submit"
-                      className="w-full h-[44px] mt-2 md:mt-5 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold text-xs sm:text-sm shadow-[0_10px_30px_rgba(16,185,129,0.7)] hover:from-emerald-600 hover:to-green-600 active:scale-[0.97] transition"
-                    >
-                      {tripType === "oneway"
-                        ? "🚗 SEARCH ONE WAY CABS"
-                        : "🔄 SEARCH ROUND TRIP CABS"}
-                    </button>
-                  </div>
                 </div>
-              )}
 
-              {/* AIRPORT */}
-              {service === "airport" && (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                {tripType === "roundtrip" && (
+                  <div className="grid gap-4 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.3fr)] max-w-md mt-2">
+                    <div>
+                      <label className="block text-xs md:text-sm text-white/80 mb-1.5">
+                        Return Date
+                      </label>
+                      <input
+                        type="date"
+                        value={outReturnDate}
+                        min={minReturnDate}
+                        onChange={(e) =>
+                          setOutReturnDate(
+                            e.target.value
+                          )
+                        }
+                        className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs md:text-sm text-white/80 mb-1.5">
+                        Return Time
+                      </label>
+                      <input
+                        type="time"
+                        value={outReturnTime}
+                        onChange={(e) =>
+                          setOutReturnTime(
+                            e.target.value
+                          )
+                        }
+                        className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* AIRPORT */}
+            {service === "airport" && (
+              <>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,2.2fr)_minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1.3fr)] items-end">
                   {airportMode === "drop" ? (
                     <>
                       {/* pickup location */}
                       <div
-                        className="md:col-span-3 relative"
+                        className="relative"
                         ref={pickupListRef}
                       >
-                        <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                        <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                           Pickup Location (India)
-                        </div>
+                        </label>
                         <input
                           ref={pickupInputRef}
                           type="text"
@@ -1391,24 +1359,27 @@ export default function Hero({ onSearch = () => {} }) {
                             );
                           }}
                           placeholder="Home / Hotel / Office..."
-                          className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                          className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                         />
                         {pickupOpen &&
-                          pickupSug.length > 0 && (
-                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-50 text-xs">
+                          pickupSug.length >
+                            0 && (
+                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-50 text-sm">
                               {pickupSug.map(
                                 (sug) => (
                                   <li
                                     key={sug.id}
-                                    onMouseDown={(e) => {
+                                    onMouseDown={(
+                                      e
+                                    ) => {
                                       e.preventDefault();
                                       pickLocal(
                                         sug
                                       );
                                     }}
-                                    className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                    className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
                                   >
-                                    <span className="text-lg">
+                                    <span className="text-xl flex-shrink-0">
                                       {getPlaceIcon(
                                         sug.label
                                       )}
@@ -1428,7 +1399,9 @@ export default function Hero({ onSearch = () => {} }) {
                                         )}
                                         {sug.state && (
                                           <span>
-                                            ,{" "}
+                                            {sug.city
+                                              ? ", "
+                                              : ""}
                                             {
                                               sug.state
                                             }
@@ -1445,12 +1418,12 @@ export default function Hero({ onSearch = () => {} }) {
 
                       {/* airport */}
                       <div
-                        className="md:col-span-3 relative"
+                        className="relative"
                         ref={airportListRef}
                       >
-                        <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                        <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                           Drop Airport
-                        </div>
+                        </label>
                         <input
                           ref={airportInputRef}
                           type="text"
@@ -1463,26 +1436,28 @@ export default function Hero({ onSearch = () => {} }) {
                               e.target.value
                             );
                           }}
-                          placeholder="Airport name or code"
-                          className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                          placeholder="Enter airport name or code"
+                          className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                         />
                         {airportOpen &&
                           airportSug.length >
                             0 && (
-                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-50 text-xs">
+                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-50 text-sm">
                               {airportSug.map(
                                 (sug) => (
                                   <li
                                     key={sug.id}
-                                    onMouseDown={(e) => {
+                                    onMouseDown={(
+                                      e
+                                    ) => {
                                       e.preventDefault();
                                       pickAirport(
                                         sug
                                       );
                                     }}
-                                    className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                    className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
                                   >
-                                    <span className="text-lg">
+                                    <span className="text-xl">
                                       ✈
                                     </span>
                                     <div className="text-gray-800 font-medium truncate">
@@ -1499,12 +1474,12 @@ export default function Hero({ onSearch = () => {} }) {
                     <>
                       {/* pickup airport */}
                       <div
-                        className="md:col-span-3 relative"
+                        className="relative"
                         ref={airportListRef}
                       >
-                        <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                        <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                           Pickup Airport
-                        </div>
+                        </label>
                         <input
                           ref={airportInputRef}
                           type="text"
@@ -1517,26 +1492,28 @@ export default function Hero({ onSearch = () => {} }) {
                               e.target.value
                             );
                           }}
-                          placeholder="Airport name or code"
-                          className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                          placeholder="Enter airport name or code"
+                          className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                         />
                         {airportOpen &&
                           airportSug.length >
                             0 && (
-                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-50 text-xs">
+                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-50 text-sm">
                               {airportSug.map(
                                 (sug) => (
                                   <li
                                     key={sug.id}
-                                    onMouseDown={(e) => {
+                                    onMouseDown={(
+                                      e
+                                    ) => {
                                       e.preventDefault();
                                       pickAirport(
                                         sug
                                       );
                                     }}
-                                    className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                    className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
                                   >
-                                    <span className="text-lg">
+                                    <span className="text-xl">
                                       ✈
                                     </span>
                                     <div className="text-gray-800 font-medium truncate">
@@ -1551,75 +1528,78 @@ export default function Hero({ onSearch = () => {} }) {
 
                       {/* drop location */}
                       <div
-                        className="md:col-span-3 relative"
+                        className="relative"
                         ref={toListRef}
                       >
-                        <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                        <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                           Drop Location (India)
-                        </div>
+                        </label>
                         <input
                           ref={toInputRef}
                           type="text"
                           value={toVal}
                           onChange={(e) => {
                             setSelectedToPlace(null);
-                            setToVal(
-                              e.target.value
-                            );
+                            setToVal(e.target.value);
                           }}
                           placeholder="Home / Hotel / Office..."
-                          className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                          className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                         />
-                        {toOpen && toSug.length > 0 && (
-                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-50 text-xs">
-                            {toSug.map((sug) => (
-                              <li
-                                key={sug.id}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  pickTo(sug);
-                                }}
-                                className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                              >
-                                <span className="text-lg">
-                                  {getPlaceIcon(
-                                    sug.label
-                                  )}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-gray-800 font-medium truncate">
-                                    {sug.name ||
-                                      sug.label}
-                                  </div>
-                                  <div className="text-[11px] text-gray-500 truncate">
-                                    {sug.city && (
-                                      <span>
-                                        {sug.city}
-                                      </span>
+                        {toOpen &&
+                          toSug.length > 0 && (
+                            <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-50 text-sm">
+                              {toSug.map((sug) => (
+                                <li
+                                  key={sug.id}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    pickTo(sug);
+                                  }}
+                                  className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                >
+                                  <span className="text-xl flex-shrink-0">
+                                    {getPlaceIcon(
+                                      sug.label
                                     )}
-                                    {sug.state && (
-                                      <span>
-                                        ,{" "}
-                                        {
-                                          sug.state
-                                        }
-                                      </span>
-                                    )}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-gray-800 font-medium truncate">
+                                      {sug.name ||
+                                        sug.label}
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 truncate">
+                                      {sug.city && (
+                                        <span>
+                                          {
+                                            sug.city
+                                          }
+                                        </span>
+                                      )}
+                                      {sug.state && (
+                                        <span>
+                                          {sug.city
+                                            ? ", "
+                                            : ""}
+                                          {
+                                            sug.state
+                                          }
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                       </div>
                     </>
                   )}
 
                   {/* date */}
-                  <div className="md:col-span-2">
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                  <div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       Pickup Date
-                    </div>
+                    </label>
                     <input
                       type="date"
                       value={airportDate}
@@ -1629,15 +1609,15 @@ export default function Hero({ onSearch = () => {} }) {
                           e.target.value
                         )
                       }
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                   </div>
 
                   {/* time */}
-                  <div className="md:col-span-2">
-                    <div className="mb-1 text-[11px] sm:text-xs text-slate-200/80">
+                  <div>
+                    <label className="block text-xs md:text-sm text-white/80 mb-1.5">
                       Pickup Time
-                    </div>
+                    </label>
                     <input
                       type="time"
                       value={airportTime}
@@ -1646,23 +1626,23 @@ export default function Hero({ onSearch = () => {} }) {
                           e.target.value
                         )
                       }
-                      className="w-full h-[44px] rounded-lg bg-white text-slate-900 px-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
+                      className="w-full rounded-xl bg-white text-sm text-slate-900 px-3 py-3 border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
                     />
                   </div>
-
-                  {/* button */}
-                  <div className="md:col-span-2 flex">
-                    <button
-                      type="submit"
-                      className="w-full h-[44px] mt-2 md:mt-5 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold text-xs sm:text-sm shadow-[0_10px_30px_rgba(16,185,129,0.7)] hover:from-emerald-600 hover:to-green-600 active:scale-[0.97] transition"
-                    >
-                      ✈ SEARCH AIRPORT CABS
-                    </button>
-                  </div>
                 </div>
-              )}
-            </form>
-          </div>
+              </>
+            )}
+
+            {/* SEARCH BUTTON */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                className="w-full md:w-48 h-12 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-sm shadow-[0_16px_35px_rgba(244,63,94,0.65)] hover:from-pink-600 hover:to-rose-600 transition-all active:scale-[0.97]"
+              >
+                SEARCH
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </section>
