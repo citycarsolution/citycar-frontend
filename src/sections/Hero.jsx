@@ -1,15 +1,9 @@
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+// src/sections/Hero.jsx
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { OUTSTATION_CITIES } from "../data/outstationCities";
 import { AIRPORTS } from "../data/airportsData";
 
 const PHOTON_URL = "https://photon.komoot.io/api/";
-
-/* ---------------- general helpers ---------------- */
 
 function debounce(fn, ms = 350) {
   let t;
@@ -19,8 +13,7 @@ function debounce(fn, ms = 350) {
   };
 }
 
-/* ------------- India helpers (same as before) ------------- */
-
+/* India helpers */
 const IN_STATES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
@@ -64,17 +57,14 @@ const isIndiaFeature = (p) => {
   const country = (p?.country || "").toLowerCase();
   const state = (p?.state || "").toLowerCase();
   return (
-    country === "india" ||
-    IN_STATES.some((s) => s.toLowerCase() === state)
+    country === "india" || IN_STATES.some((s) => s.toLowerCase() === state)
   );
 };
 
 function normalizeIndiaLabel(p) {
   const state = p.state || "";
-  let city =
-    p.city || p.town || p.village || p.suburb || "";
+  let city = p.city || p.town || p.village || p.suburb || "";
 
-  // Mumbai special handling
   if (!city && state === "Maharashtra") {
     const admin = [
       p.city,
@@ -89,47 +79,25 @@ function normalizeIndiaLabel(p) {
       .toLowerCase();
     if (/mumbai/.test(admin)) city = "Mumbai";
   }
-  if (
-    !city &&
-    state === "Maharashtra" &&
-    /(ward)/i.test(p.district || "")
-  ) {
+  if (!city && state === "Maharashtra" && /(ward)/i.test(p.district || "")) {
     city = "Mumbai";
   }
 
-  const name =
-    p.name || p.street || p.suburb || city || "";
+  const name = p.name || p.street || p.suburb || city || "";
   const parts = [name, city, state, "India"].filter(Boolean);
-  return {
-    label: parts.join(", "),
-    name,
-    city,
-    state,
-    country: "India",
-  };
+  return { label: parts.join(", "), name, city, state, country: "India" };
 }
 
-async function photonSearch(
-  q,
-  limit = 8,
-  lat = null,
-  lon = null,
-  signal = null
-) {
+async function photonSearch(q, limit = 8, lat = null, lon = null, signal = null) {
   if (!q || q.trim().length < 2) return [];
-  const cleanQuery = q
-    .replace(/[^\w\s]/gi, "")
-    .trim();
+  const cleanQuery = q.replace(/[^\w\s]/gi, "").trim();
   if (cleanQuery.length < 2) return [];
-
   const query = `${cleanQuery} India`;
   const urlBase = `${PHOTON_URL}?q=${encodeURIComponent(
     query
   )}&limit=${limit}&lang=en`;
   const url =
-    lat && lon
-      ? `${urlBase}&lat=${lat}&lon=${lon}`
-      : urlBase;
+    lat && lon ? `${urlBase}&lat=${lat}&lon=${lon}` : urlBase;
 
   try {
     const res = await fetch(url, { signal });
@@ -143,7 +111,7 @@ async function photonSearch(
         const n = normalizeIndiaLabel(p);
         const [lon0, lat0] = g.coordinates || [];
         return {
-          id: `${p.osm_id || Math.random()}`,
+          id: p.osm_id || Math.random(),
           label: n.label,
           name: n.name,
           city: n.city,
@@ -159,7 +127,7 @@ async function photonSearch(
   }
 }
 
-/* curated local samples – same list you had */
+/* curated local samples */
 const INDIAN_LOCATIONS = [
   "Colaba, Mumbai, Maharashtra, India",
   "Bandra West, Mumbai, Maharashtra, India",
@@ -173,114 +141,70 @@ const INDIAN_LOCATIONS = [
 const getPlaceIcon = (place = "") => {
   const s = place.toLowerCase();
   if (s.includes("airport")) return "✈";
-  if (s.includes("station") || s.includes("terminus"))
-    return "🚉";
+  if (s.includes("station") || s.includes("terminus")) return "🚉";
   if (s.includes("hotel")) return "🏨";
   if (s.includes("hospital")) return "🏥";
-  if (s.includes("college") || s.includes("university"))
-    return "🎓";
+  if (s.includes("college") || s.includes("university")) return "🎓";
   if (s.includes("school")) return "🏫";
-  if (s.includes("mall") || s.includes("market"))
-    return "🛍";
+  if (s.includes("mall") || s.includes("market")) return "🛍";
   if (s.includes("park")) return "🌳";
   if (s.includes("beach")) return "🏖";
-  if (s.includes("temple") || s.includes("mandir"))
-    return "🛕";
-  if (s.includes("complex") || s.includes("bkc"))
-    return "🏢";
-  if (
-    s.includes("apartment") ||
-    s.includes("society")
-  )
-    return "🏠";
+  if (s.includes("temple") || s.includes("mandir")) return "🛕";
+  if (s.includes("complex") || s.includes("bkc")) return "🏢";
+  if (s.includes("apartment") || s.includes("society")) return "🏠";
   return "📍";
 };
 
-/* ===================== MAIN COMPONENT ===================== */
-
 export default function Hero({ onSearch = () => {} }) {
   const [service, setService] = useState("local");
-  const [airportMode, setAirportMode] =
-    useState("drop");
-  const [tripType, setTripType] =
-    useState("oneway");
-  const [videoReady, setVideoReady] =
-    useState(false);
+  const [airportMode, setAirportMode] = useState("drop");
+  const [tripType, setTripType] = useState("oneway");
+  const [videoReady, setVideoReady] = useState(false);
 
-  const todayISO = new Date()
-    .toISOString()
-    .split("T")[0];
-  const defaultTime = new Date(
-    Date.now() + 3600000
-  )
+  const todayISO = new Date().toISOString().split("T")[0];
+  const defaultTime = new Date(Date.now() + 3600000)
     .toTimeString()
     .slice(0, 5);
 
-  /* -------------------- form state -------------------- */
-
-  const [localPickup, setLocalPickup] =
-    useState("");
-  const [selectedLocalPlace, setSelectedLocalPlace] =
-    useState(null);
-
+  // form state
+  const [localPickup, setLocalPickup] = useState("");
+  const [selectedLocalPlace, setSelectedLocalPlace] = useState(null);
   const [fromVal, setFromVal] = useState("");
   const [toVal, setToVal] = useState("");
-  const [selectedFromPlace, setSelectedFromPlace] =
-    useState(null);
-  const [selectedToPlace, setSelectedToPlace] =
-    useState(null);
+  const [selectedFromPlace, setSelectedFromPlace] = useState(null);
+  const [selectedToPlace, setSelectedToPlace] = useState(null);
+  const [airportText, setAirportText] = useState("");
+  const [selectedAirportItem, setSelectedAirportItem] = useState(null);
 
-  const [airportText, setAirportText] =
-    useState("");
-  const [selectedAirportItem, setSelectedAirportItem] =
-    useState(null);
+  const [localPackage, setLocalPackage] = useState("8x80");
 
-  const [localPackage, setLocalPackage] =
-    useState("8x80");
+  const [localDate, setLocalDate] = useState(todayISO);
+  const [localTime, setLocalTime] = useState(defaultTime);
+  const [outPickupDate, setOutPickupDate] = useState(todayISO);
+  const [outPickupTime, setOutPickupTime] = useState(defaultTime);
+  const [outReturnDate, setOutReturnDate] = useState(todayISO);
+  const [outReturnTime, setOutReturnTime] = useState(defaultTime);
+  const [airportDate, setAirportDate] = useState(todayISO);
+  const [airportTime, setAirportTime] = useState(defaultTime);
 
-  const [localDate, setLocalDate] =
-    useState(todayISO);
-  const [localTime, setLocalTime] =
-    useState(defaultTime);
-
-  const [outPickupDate, setOutPickupDate] =
-    useState(todayISO);
-  const [outPickupTime, setOutPickupTime] =
-    useState(defaultTime);
-  const [outReturnDate, setOutReturnDate] =
-    useState(todayISO);
-  const [outReturnTime, setOutReturnTime] =
-    useState(defaultTime);
-
-  const [airportDate, setAirportDate] =
-    useState(todayISO);
-  const [airportTime, setAirportTime] =
-    useState(defaultTime);
-
-  /* ---------------- suggestions ---------------- */
-
+  // suggestions
   const [pickupSug, setPickupSug] = useState([]);
   const [fromSug, setFromSug] = useState([]);
   const [toSug, setToSug] = useState([]);
   const [airportSug, setAirportSug] = useState([]);
 
-  const [pickupOpen, setPickupOpen] =
-    useState(false);
+  const [pickupOpen, setPickupOpen] = useState(false);
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
-  const [airportOpen, setAirportOpen] =
-    useState(false);
+  const [airportOpen, setAirportOpen] = useState(false);
 
-  /* ---------------- refs ---------------- */
-
+  // refs for closing/blur
   const pickupController = useRef(null);
   const toController = useRef(null);
-
   const pickupListRef = useRef(null);
   const fromListRef = useRef(null);
   const toListRef = useRef(null);
   const airportListRef = useRef(null);
-
   const pickupInputRef = useRef(null);
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
@@ -293,8 +217,6 @@ export default function Hero({ onSearch = () => {} }) {
     from: null,
   });
 
-  /* ------------- min return date for round trip ------------- */
-
   const minReturnDate = useMemo(() => {
     if (tripType === "roundtrip" && outPickupDate) {
       const nextDay = new Date(outPickupDate);
@@ -304,8 +226,7 @@ export default function Hero({ onSearch = () => {} }) {
     return todayISO;
   }, [outPickupDate, tripType, todayISO]);
 
-  /* ================= fetchers ================= */
-
+  /* ------------------- fetchers ------------------- */
   const fetchUniversalLocation = useMemo(
     () =>
       debounce(async (q, serviceType) => {
@@ -318,19 +239,15 @@ export default function Hero({ onSearch = () => {} }) {
 
         if (
           lastPickedRef.current.pickup &&
-          qq ===
-            lastPickedRef.current.pickup.toLowerCase()
+          qq === lastPickedRef.current.pickup.toLowerCase()
         ) {
           return;
         }
 
         let combined = [];
         try {
-          if (pickupController.current)
-            pickupController.current.abort();
-          pickupController.current =
-            new AbortController();
-
+          if (pickupController.current) pickupController.current.abort();
+          pickupController.current = new AbortController();
           const photon = await photonSearch(
             q,
             12,
@@ -338,22 +255,15 @@ export default function Hero({ onSearch = () => {} }) {
             null,
             pickupController.current.signal
           );
-
-          const photonFormatted = photon.map(
-            (place, idx) => ({
-              ...place,
-              id: `photon_${idx}_${place.id}`,
-              icon: getPlaceIcon(place.label),
-              service: serviceType,
-            })
-          );
-
-          const localMatches = INDIAN_LOCATIONS
-           .filter((place) =>
-              place
-                .toLowerCase()
-                .includes(qq)
-            )
+          const photonFormatted = photon.map((place, idx) => ({
+            ...place,
+            id: `photon_${idx}_${place.id}`,
+            icon: getPlaceIcon(place.label),
+            service: serviceType,
+          }));
+          const localMatches = INDIAN_LOCATIONS.filter((place) =>
+            place.toLowerCase().includes(qq)
+          )
             .slice(0, 6)
             .map((place, index) => {
               const parts = place.split(",");
@@ -361,10 +271,8 @@ export default function Hero({ onSearch = () => {} }) {
                 id: `local_${index}_${place}`,
                 label: place,
                 name: parts[0],
-                city:
-                  parts[1]?.trim() || "",
-                state:
-                  parts[2]?.trim() || "",
+                city: parts[1]?.trim() || "",
+                state: parts[2]?.trim() || "",
                 type: "location",
                 icon: getPlaceIcon(place),
                 service: serviceType,
@@ -372,24 +280,15 @@ export default function Hero({ onSearch = () => {} }) {
                 lon: null,
               };
             });
-
-          combined = [
-            ...photonFormatted,
-            ...localMatches,
-          ];
-
+          combined = [...photonFormatted, ...localMatches];
           const seen = new Set();
           combined = combined.filter((it) => {
-            const key =
-              (it.label || "").toLowerCase();
+            const key = (it.label || "").toLowerCase();
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
           });
-        } catch {
-          // ignore
-        }
-
+        } catch {}
         setPickupSug(combined.slice(0, 20));
         setPickupOpen(combined.length > 0);
       }, 400),
@@ -408,19 +307,15 @@ export default function Hero({ onSearch = () => {} }) {
 
         if (
           lastPickedRef.current.to &&
-          qq ===
-            lastPickedRef.current.to.toLowerCase()
+          qq === lastPickedRef.current.to.toLowerCase()
         ) {
           return;
         }
 
         let combined = [];
         try {
-          if (toController.current)
-            toController.current.abort();
-          toController.current =
-            new AbortController();
-
+          if (toController.current) toController.current.abort();
+          toController.current = new AbortController();
           const photon = await photonSearch(
             q,
             12,
@@ -428,22 +323,15 @@ export default function Hero({ onSearch = () => {} }) {
             null,
             toController.current.signal
           );
-
-          const photonFormatted = photon.map(
-            (place, idx) => ({
-              ...place,
-              id: `photon_drop_${idx}_${place.id}`,
-              icon: getPlaceIcon(place.label),
-              service: "airport",
-            })
-          );
-
-          const localMatches = INDIAN_LOCATIONS
-            .filter((place) =>
-              place
-                .toLowerCase()
-                .includes(qq)
-            )
+          const photonFormatted = photon.map((place, idx) => ({
+            ...place,
+            id: `photon_drop_${idx}_${place.id}`,
+            icon: getPlaceIcon(place.label),
+            service: "airport",
+          }));
+          const localMatches = INDIAN_LOCATIONS.filter((place) =>
+            place.toLowerCase().includes(qq)
+          )
             .slice(0, 6)
             .map((place, index) => {
               const parts = place.split(",");
@@ -451,10 +339,8 @@ export default function Hero({ onSearch = () => {} }) {
                 id: `drop_${index}_${place}`,
                 label: place,
                 name: parts[0],
-                city:
-                  parts[1]?.trim() || "",
-                state:
-                  parts[2]?.trim() || "",
+                city: parts[1]?.trim() || "",
+                state: parts[2]?.trim() || "",
                 type: "location",
                 icon: getPlaceIcon(place),
                 service: "airport",
@@ -462,24 +348,15 @@ export default function Hero({ onSearch = () => {} }) {
                 lon: null,
               };
             });
-
-          combined = [
-            ...photonFormatted,
-            ...localMatches,
-          ];
-
+          combined = [...photonFormatted, ...localMatches];
           const seen = new Set();
           combined = combined.filter((it) => {
-            const key =
-              (it.label || "").toLowerCase();
+            const key = (it.label || "").toLowerCase();
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
           });
-        } catch {
-          // ignore
-        }
-
+        } catch {}
         setToSug(combined.slice(0, 20));
         setToOpen(combined.length > 0);
       }, 400),
@@ -498,25 +375,15 @@ export default function Hero({ onSearch = () => {} }) {
 
         if (
           lastPickedRef.current.from &&
-          qq ===
-            lastPickedRef.current.from.toLowerCase()
+          qq === lastPickedRef.current.from.toLowerCase()
         ) {
           return;
         }
 
-        const cityMatches =
-          (OUTSTATION_CITIES || [])
-            .filter((c) =>
-              c.toLowerCase().includes(qq)
-            )
-            .slice(0, 12)
-            .map((c) => ({
-              id: c,
-              label: c,
-              type: "city",
-              icon: "🏙",
-            }));
-
+        const cityMatches = (OUTSTATION_CITIES || [])
+          .filter((c) => c.toLowerCase().includes(qq))
+          .slice(0, 12)
+          .map((c) => ({ id: c, label: c, type: "city", icon: "🏙" }));
         setFromSug(cityMatches);
         setFromOpen(cityMatches.length > 0);
       }, 300),
@@ -535,8 +402,7 @@ export default function Hero({ onSearch = () => {} }) {
 
         if (
           lastPickedRef.current.airport &&
-          qq ===
-            lastPickedRef.current.airport.toLowerCase()
+          qq === lastPickedRef.current.airport.toLowerCase()
         ) {
           return;
         }
@@ -544,53 +410,31 @@ export default function Hero({ onSearch = () => {} }) {
         const matches = (AIRPORTS || [])
           .filter(
             (a) =>
-              a.label
-                ?.toLowerCase()
-                ?.includes(qq) ||
-              a.id
-                ?.toLowerCase?.()
-                ?.includes(qq)
+              a.label?.toLowerCase()?.includes(qq) ||
+              a.id?.toLowerCase?.()?.includes(qq)
           )
           .slice(0, 30)
-          .map((airport) => ({
-            ...airport,
-            icon: "✈",
-          }));
-
+          .map((airport) => ({ ...airport, icon: "✈" }));
         setAirportSug(matches);
         setAirportOpen(matches.length > 0);
       }, 300),
     []
   );
 
-  /* ================= effects ================= */
-
+  /* ------------------- Effects ------------------- */
   useEffect(() => {
     if (service === "local") {
       fetchUniversalLocation(localPickup, "local");
-    } else if (
-      service === "airport" &&
-      airportMode === "drop"
-    ) {
-      fetchUniversalLocation(
-        localPickup,
-        "airport"
-      );
+    } else if (service === "airport" && airportMode === "drop") {
+      fetchUniversalLocation(localPickup, "airport");
     } else {
       setPickupSug([]);
       setPickupOpen(false);
     }
-  }, [
-    localPickup,
-    service,
-    airportMode,
-    fetchUniversalLocation,
-  ]);
+  }, [localPickup, service, airportMode, fetchUniversalLocation]);
 
   useEffect(() => {
-    if (service === "outstation") {
-      fetchOutstationFrom(fromVal);
-    }
+    if (service === "outstation") fetchOutstationFrom(fromVal);
   }, [fromVal, service, fetchOutstationFrom]);
 
   useEffect(() => {
@@ -604,42 +448,24 @@ export default function Hero({ onSearch = () => {} }) {
 
       if (
         lastPickedRef.current.to &&
-        qq ===
-          lastPickedRef.current.to.toLowerCase()
+        qq === lastPickedRef.current.to.toLowerCase()
       ) {
         return;
       }
 
-      const cityMatches =
-        (OUTSTATION_CITIES || [])
-          .filter((c) =>
-            c.toLowerCase().includes(qq)
-          )
-          .slice(0, 12)
-          .map((c) => ({
-            id: c,
-            label: c,
-            type: "city",
-            icon: "🏙",
-          }));
-
+      const cityMatches = (OUTSTATION_CITIES || [])
+        .filter((c) => c.toLowerCase().includes(qq))
+        .slice(0, 12)
+        .map((c) => ({ id: c, label: c, type: "city", icon: "🏙" }));
       setToSug(cityMatches);
       setToOpen(cityMatches.length > 0);
-    } else if (
-      service === "airport" &&
-      airportMode === "pickup"
-    ) {
+    } else if (service === "airport" && airportMode === "pickup") {
       fetchDropLocation(toVal);
     } else {
       setToSug([]);
       setToOpen(false);
     }
-  }, [
-    toVal,
-    service,
-    airportMode,
-    fetchDropLocation,
-  ]);
+  }, [toVal, service, airportMode, fetchDropLocation]);
 
   useEffect(() => {
     if (service === "airport") {
@@ -648,74 +474,35 @@ export default function Hero({ onSearch = () => {} }) {
       setAirportSug([]);
       setAirportOpen(false);
     }
-  }, [
-    airportText,
-    service,
-    fetchAirportSuggestions,
-  ]);
+  }, [airportText, service, fetchAirportSuggestions]);
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (
-        pickupListRef.current &&
-        !pickupListRef.current.contains(e.target)
-      ) {
+      if (pickupListRef.current && !pickupListRef.current.contains(e.target))
         setPickupOpen(false);
-      }
-      if (
-        fromListRef.current &&
-        !fromListRef.current.contains(e.target)
-      ) {
+      if (fromListRef.current && !fromListRef.current.contains(e.target))
         setFromOpen(false);
-      }
-      if (
-        toListRef.current &&
-        !toListRef.current.contains(e.target)
-      ) {
+      if (toListRef.current && !toListRef.current.contains(e.target))
         setToOpen(false);
-      }
       if (
         airportListRef.current &&
         !airportListRef.current.contains(e.target)
-      ) {
+      )
         setAirportOpen(false);
-      }
     }
-
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
-    return () =>
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  /* ============ helpers for picking from list ============ */
 
   async function enrichIfNoCoords(item) {
     if (!item) return item;
-    if (
-      typeof item.lat === "number" &&
-      typeof item.lon === "number"
-    )
-      return item;
+    if (typeof item.lat === "number" && typeof item.lon === "number") return item;
     const q = item?.label || item?.name || "";
     if (!q) return item;
     try {
       const best = (await photonSearch(q, 1))?.[0];
-      if (best) {
-        return {
-          ...item,
-          lat: best.lat,
-          lon: best.lon,
-        };
-      }
-    } catch {
-      // ignore
-    }
+      if (best) return { ...item, lat: best.lat, lon: best.lon };
+    } catch {}
     return item;
   }
 
@@ -725,77 +512,52 @@ export default function Hero({ onSearch = () => {} }) {
     setSelectedLocalPlace(x);
     setPickupSug([]);
     setPickupOpen(false);
-
     lastPickedRef.current.pickup = x.label;
     setTimeout(() => {
-      if (
-        lastPickedRef.current.pickup === x.label
-      ) {
+      if (lastPickedRef.current.pickup === x.label)
         lastPickedRef.current.pickup = null;
-      }
     }, 700);
-
     pickupInputRef.current?.blur();
   };
-
   const pickFrom = async (item) => {
     const x = await enrichIfNoCoords(item);
     setFromVal(x.label);
     setSelectedFromPlace(x);
     setFromSug([]);
     setFromOpen(false);
-
     lastPickedRef.current.from = x.label;
     setTimeout(() => {
-      if (
-        lastPickedRef.current.from === x.label
-      ) {
+      if (lastPickedRef.current.from === x.label)
         lastPickedRef.current.from = null;
-      }
     }, 700);
-
     fromInputRef.current?.blur();
   };
-
   const pickTo = async (item) => {
     const x = await enrichIfNoCoords(item);
     setToVal(x.label);
     setSelectedToPlace(x);
     setToSug([]);
     setToOpen(false);
-
     lastPickedRef.current.to = x.label;
     setTimeout(() => {
-      if (
-        lastPickedRef.current.to === x.label
-      ) {
+      if (lastPickedRef.current.to === x.label)
         lastPickedRef.current.to = null;
-      }
     }, 700);
-
     toInputRef.current?.blur();
   };
-
   const pickAirport = async (item) => {
     const x = await enrichIfNoCoords(item);
     setAirportText(x.label);
     setSelectedAirportItem(x);
     setAirportSug([]);
     setAirportOpen(false);
-
     lastPickedRef.current.airport = x.label;
     setTimeout(() => {
-      if (
-        lastPickedRef.current.airport === x.label
-      ) {
+      if (lastPickedRef.current.airport === x.label)
         lastPickedRef.current.airport = null;
-      }
     }, 700);
-
     airportInputRef.current?.blur();
   };
-
-  /* ================= handlers ================= */
 
   const handleServiceChange = (newService) => {
     setService(newService);
@@ -803,17 +565,14 @@ export default function Hero({ onSearch = () => {} }) {
     setFromVal("");
     setToVal("");
     setAirportText("");
-
     setSelectedLocalPlace(null);
     setSelectedFromPlace(null);
     setSelectedToPlace(null);
     setSelectedAirportItem(null);
-
     setPickupSug([]);
     setFromSug([]);
     setToSug([]);
     setAirportSug([]);
-
     setTripType("oneway");
   };
 
@@ -834,26 +593,13 @@ export default function Hero({ onSearch = () => {} }) {
         alert("Please enter pickup location");
         return;
       }
-
       const pkgHours =
-        localPackage === "12x120"
-          ? 12
-          : localPackage === "8x80"
-          ? 8
-          : 24;
+        localPackage === "12x120" ? 12 : localPackage === "8x80" ? 8 : 24;
       const pkgKm =
-        localPackage === "12x120"
-          ? 120
-          : localPackage === "8x80"
-          ? 80
-          : 250;
-
+        localPackage === "12x120" ? 120 : localPackage === "8x80" ? 80 : 250;
       payload = {
         service: "local",
-        pickup:
-          selectedLocalPlace || {
-            label: localPickup,
-          },
+        pickup: selectedLocalPlace || { label: localPickup },
         pickupDate: localDate,
         pickupTime: localTime,
         package: localPackage,
@@ -863,22 +609,14 @@ export default function Hero({ onSearch = () => {} }) {
       };
     } else if (service === "outstation") {
       if (!fromVal.trim() || !toVal.trim()) {
-        alert(
-          "Please enter both from and to locations"
-        );
+        alert("Please enter both from and to locations");
         return;
       }
       payload = {
         service: "outstation",
         tripType,
-        pickup:
-          selectedFromPlace || {
-            label: fromVal,
-          },
-        drop:
-          selectedToPlace || {
-            label: toVal,
-          },
+        pickup: selectedFromPlace || { label: fromVal },
+        drop: selectedToPlace || { label: toVal },
         pickupDate: outPickupDate,
         pickupTime: outPickupTime,
         ...(tripType === "roundtrip" && {
@@ -888,50 +626,28 @@ export default function Hero({ onSearch = () => {} }) {
       };
     } else if (service === "airport") {
       if (airportMode === "drop") {
-        if (
-          !localPickup.trim() ||
-          !airportText.trim()
-        ) {
-          alert(
-            "Please enter both pickup location and airport"
-          );
+        if (!localPickup.trim() || !airportText.trim()) {
+          alert("Please enter both pickup location and airport");
           return;
         }
         payload = {
           service: "airport",
           airportMode: "drop",
-          pickup:
-            selectedLocalPlace || {
-              label: localPickup,
-            },
-          airport:
-            selectedAirportItem || {
-              label: airportText,
-            },
+          pickup: selectedLocalPlace || { label: localPickup },
+          airport: selectedAirportItem || { label: airportText },
           pickupDate: airportDate,
           pickupTime: airportTime,
         };
       } else {
-        if (
-          !airportText.trim() ||
-          !toVal.trim()
-        ) {
-          alert(
-            "Please enter both airport and drop location"
-          );
+        if (!airportText.trim() || !toVal.trim()) {
+          alert("Please enter both airport and drop location");
           return;
         }
         payload = {
           service: "airport",
           airportMode: "pickup",
-          airport:
-            selectedAirportItem || {
-              label: airportText,
-            },
-          drop:
-            selectedToPlace || {
-              label: toVal,
-            },
+          airport: selectedAirportItem || { label: airportText },
+          drop: selectedToPlace || { label: toVal },
           pickupDate: airportDate,
           pickupTime: airportTime,
         };
@@ -941,20 +657,18 @@ export default function Hero({ onSearch = () => {} }) {
     if (payload) {
       try {
         console.log("SEARCH_PAYLOAD:", payload);
-      } catch {
-        // ignore
-      }
+      } catch {}
       onSearch(payload);
     }
   };
 
-  /* ===================== UI (layout like screenshot) ===================== */
+  /* ================= UI (Desktop left + right, Mobile stacked) ================= */
 
   return (
-    <section className="relative w-full min-h-[420px] md:min-h-[480px] lg:min-h-[520px] flex items-center justify-center overflow-hidden">
+    <section className="relative w-full min-h-[700px] sm:min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* background video */}
       <video
-        className={`absolute inset-0 h-full w-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${
+        className={`absolute inset-0 w-full h-full object-cover z-0 pointer-events-none transition-opacity duration-500 ${
           videoReady ? "opacity-100" : "opacity-0"
         }`}
         autoPlay
@@ -969,496 +683,224 @@ export default function Hero({ onSearch = () => {} }) {
       </video>
 
       {/* dark overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/65 to-black/80 z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90 z-10 pointer-events-none" />
 
       {/* content */}
-      <div className="relative z-20 w-full max-w-6xl px-4 md:px-6 py-10 md:py-14">
-        {/* tabs row */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <button
-            type="button"
-            onClick={() => handleServiceChange("local")}
-            className={`px-6 py-2.5 rounded-full text-sm font-medium border transition-all ${
-              service === "local"
-                ? "bg-white text-slate-900 border-white shadow-md"
-                : "bg-slate-900/40 border-white/20 text-white/80 hover:bg-slate-900/70"
-            }`}
-          >
-            Local Rentals
-          </button>
-          <button
-            type="button"
-            onClick={() => handleServiceChange("outstation")}
-            className={`px-6 py-2.5 rounded-full text-sm font-medium border transition-all ${
-              service === "outstation"
-                ? "bg-white text-slate-900 border-white shadow-md"
-                : "bg-slate-900/40 border-white/20 text-white/80 hover:bg-slate-900/70"
-            }`}
-          >
-            Outstation
-          </button>
-          <button
-            type="button"
-            onClick={() => handleServiceChange("airport")}
-            className={`px-6 py-2.5 rounded-full text-sm font-medium border transition-all ${
-              service === "airport"
-                ? "bg-white text-slate-900 border-white shadow-md"
-                : "bg-slate-900/40 border-white/20 text-white/80 hover:bg-slate-900/70"
-            }`}
-          >
-            Airport Transfer
-          </button>
+      <div className="relative z-20 w-full px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-[1.15fr_minmax(0,1fr)] gap-8 lg:gap-10 items-center text-white">
+          {/* LEFT TEXT BLOCK */}
+          <div className="space-y-5 md:space-y-6">
+            <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/60 text-[11px] sm:text-xs uppercase tracking-[0.18em] text-emerald-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Mumbai & All India Cab Service
+            </p>
 
-          {/* right side small toggles for outstation/airport on desktop */}
-          <div className="ml-auto hidden md:flex items-center gap-2 text-xs">
-            {service === "outstation" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleTripTypeChange("oneway")}
-                  className={`px-3 py-1.5 rounded-full border transition-all ${
-                    tripType === "oneway"
-                      ? "bg-sky-500 text-white border-sky-300"
-                      : "bg-slate-900/40 border-white/20 text-white/80 hover:bg-slate-900/70"
-                  }`}
-                >
-                  🚗 One Way
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTripTypeChange("roundtrip")}
-                  className={`px-3 py-1.5 rounded-full border transition-all ${
-                    tripType === "roundtrip"
-                      ? "bg-sky-500 text-white border-sky-300"
-                      : "bg-slate-900/40 border-white/20 text-white/80 hover:bg-slate-900/70"
-                  }`}
-                >
-                  🔄 Round Trip
-                </button>
-              </>
-            )}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight">
+              Local, Outstation &{" "}
+              <span className="text-emerald-400">Airport Cabs</span>
+            </h1>
 
-            {service === "airport" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAirportMode("drop");
-                    setSelectedAirportItem(null);
-                    setAirportText("");
-                    setToVal("");
-                    setSelectedToPlace(null);
-                  }}
-                  className={`px-3 py-1.5 rounded-full border transition-all ${
-                    airportMode === "drop"
-                      ? "bg-sky-500 text-white border-sky-300"
-                      : "bg-slate-900/40 border-white/20 text-white/80 hover:bg-slate-900/70"
-                  }`}
-                >
-                  🚗 Drop to Airport
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAirportMode("pickup");
-                    setSelectedAirportItem(null);
-                    setAirportText("");
-                    setLocalPickup("");
-                    setSelectedLocalPlace(null);
-                  }}
-                  className={`px-3 py-1.5 rounded-full border transition-all ${
-                    airportMode === "pickup"
-                      ? "bg-sky-500 text-white border-sky-300"
-                      : "bg-slate-900/40 border-white/20 text-white/80 hover:bg-slate-900/70"
-                  }`}
-                >
-                  🛬 Pickup from Airport
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+            <p className="text-sm sm:text-base text-slate-200/90 max-w-xl">
+              Professional drivers, clean AC cabs and transparent pricing. Book
+              your ride in just a few seconds with instant confirmation SMS /
+              WhatsApp.
+            </p>
 
-        {/* main form card (wide bar) */}
-        <div className="bg-slate-900/70 border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] px-4 py-6 md:px-8 md:py-7">
-          {/* heading + mobile toggles */}
-          <div className="flex flex-col md:flex-row gap-3 md:gap-6 md:items-center md:justify-between mb-5">
-            <div>
-              <h3 className="text-lg md:text-xl font-semibold text-white">
-                {service === "local"
-                  ? "Local Rentals"
-                  : service === "outstation"
-                  ? "Outstation Trip"
-                  : "Airport Transfer"}
-              </h3>
-              <p className="text-xs md:text-sm text-white/60 mt-1">
-                AC cabs for city rides, outstation & airport transfers.
-              </p>
-            </div>
-
-            {/* mobile toggles */}
-            <div className="flex md:hidden flex-wrap gap-2 text-xs">
-              {service === "outstation" && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleTripTypeChange("oneway")}
-                    className={`px-3 py-1.5 rounded-full border transition-all ${
-                      tripType === "oneway"
-                        ? "bg-sky-500 text-white border-sky-300"
-                        : "bg-slate-800 border-white/20 text-white/80"
-                    }`}
-                  >
-                    🚗 One Way
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTripTypeChange("roundtrip")}
-                    className={`px-3 py-1.5 rounded-full border transition-all ${
-                      tripType === "roundtrip"
-                        ? "bg-sky-500 text-white border-sky-300"
-                        : "bg-slate-800 border-white/20 text-white/80"
-                    }`}
-                  >
-                    🔄 Round Trip
-                  </button>
-                </>
-              )}
-
-              {service === "airport" && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAirportMode("drop");
-                      setSelectedAirportItem(null);
-                      setAirportText("");
-                      setToVal("");
-                      setSelectedToPlace(null);
-                    }}
-                    className={`px-3 py-1.5 rounded-full border transition-all ${
-                      airportMode === "drop"
-                        ? "bg-sky-500 text-white border-sky-300"
-                        : "bg-slate-800 border-white/20 text-white/80"
-                    }`}
-                  >
-                    🚗 Drop to Airport
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAirportMode("pickup");
-                      setSelectedAirportItem(null);
-                      setAirportText("");
-                      setLocalPickup("");
-                      setSelectedLocalPlace(null);
-                    }}
-                    className={`px-3 py-1.5 rounded-full border transition-all ${
-                      airportMode === "pickup"
-                        ? "bg-sky-500 text-white border-sky-300"
-                        : "bg-slate-800 border-white/20 text-white/80"
-                    }`}
-                  >
-                    🛬 Pickup from Airport
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* ==================== FORM ==================== */}
-          <form onSubmit={handleSubmit}>
-            {/* -------- LOCAL -------- */}
-            {service === "local" && (
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-end">
-                {/* pickup */}
-                <div
-                  className="relative md:col-span-5"
-                  ref={pickupListRef}
-                >
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    Pickup Location (India)
-                  </label>
-                  <input
-                    ref={pickupInputRef}
-                    type="text"
-                    value={localPickup}
-                    onChange={(e) => {
-                      setSelectedLocalPlace(null);
-                      setLocalPickup(e.target.value);
-                    }}
-                    placeholder="City, locality, hotel, office..."
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                  {pickupOpen && pickupSug.length > 0 && (
-                    <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50 text-sm">
-                      {pickupSug.map((sug) => (
-                        <li
-                          key={sug.id}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            pickLocal(sug);
-                          }}
-                          className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                        >
-                          <span className="text-xl flex-shrink-0">
-                            {getPlaceIcon(sug.label)}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-gray-800 font-medium truncate">
-                              {sug.name || sug.label}
-                            </div>
-                            <div className="text-[11px] text-gray-500 truncate">
-                              {sug.city && <span>{sug.city}</span>}
-                              {sug.state && <span>, {sug.state}</span>}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* package */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    Package
-                  </label>
-                  <select
-                    value={localPackage}
-                    onChange={(e) => setLocalPackage(e.target.value)}
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  >
-                    <option value="8x80">8 Hours / 80 Km</option>
-                    <option value="12x120">12 Hours / 120 Km</option>
-                    <option value="full">Full Day / 250 Km</option>
-                  </select>
-                </div>
-
-                {/* date */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    Pickup Date
-                  </label>
-                  <input
-                    type="date"
-                    value={localDate}
-                    min={todayISO}
-                    onChange={(e) => setLocalDate(e.target.value)}
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                </div>
-
-                {/* time */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    Pickup Time
-                  </label>
-                  <input
-                    type="time"
-                    value={localTime}
-                    onChange={(e) => setLocalTime(e.target.value)}
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                </div>
-
-                {/* button */}
-                <div className="md:col-span-1 flex mt-2 md:mt-0">
-                  <button
-                    type="submit"
-                    className="w-full md:w-auto md:px-6 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm md:text-base py-3 shadow-[0_10px_30px_rgba(248,113,113,0.7)] hover:from-pink-600 hover:to-red-600 active:scale-[0.98] transition-all"
-                  >
-                    SEARCH
-                  </button>
+            <div className="grid sm:grid-cols-3 gap-3 max-w-xl text-xs sm:text-sm">
+              <div className="flex items-start gap-2 rounded-2xl bg-white/5 border border-white/10 px-3 py-2.5 backdrop-blur-md">
+                <span className="text-lg">✅</span>
+                <div>
+                  <div className="font-semibold">On-Time Pickup</div>
+                  <div className="text-slate-200/75">
+                    Live tracking & driver details before trip.
+                  </div>
                 </div>
               </div>
-            )}
-
-            {/* -------- OUTSTATION -------- */}
-            {service === "outstation" && (
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-end">
-                <div
-                  className="relative md:col-span-4"
-                  ref={fromListRef}
-                >
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    From City (India)
-                  </label>
-                  <input
-                    ref={fromInputRef}
-                    type="text"
-                    value={fromVal}
-                    onChange={(e) => {
-                      setSelectedFromPlace(null);
-                      setFromVal(e.target.value);
-                    }}
-                    placeholder="Source city"
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                  {fromOpen && fromSug.length > 0 && (
-                    <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50 text-sm">
-                      {fromSug.map((sug) => (
-                        <li
-                          key={sug.id}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            pickFrom(sug);
-                          }}
-                          className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                        >
-                          <span className="text-xl">🏙</span>
-                          <div className="text-gray-800 font-medium">
-                            {sug.label}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div
-                  className="relative md:col-span-4"
-                  ref={toListRef}
-                >
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    To City (India)
-                  </label>
-                  <input
-                    ref={toInputRef}
-                    type="text"
-                    value={toVal}
-                    onChange={(e) => {
-                      setSelectedToPlace(null);
-                      setToVal(e.target.value);
-                    }}
-                    placeholder="Destination city"
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                  {toOpen && toSug.length > 0 && (
-                    <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50 text-sm">
-                      {toSug.map((sug) => (
-                        <li
-                          key={sug.id}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            pickTo(sug);
-                          }}
-                          className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                        >
-                          <span className="text-xl">🏙</span>
-                          <div className="text-gray-800 font-medium">
-                            {sug.label}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    {tripType === "oneway"
-                      ? "Pickup Date"
-                      : "Departure Date"}
-                  </label>
-                  <input
-                    type="date"
-                    value={outPickupDate}
-                    min={todayISO}
-                    onChange={(e) =>
-                      setOutPickupDate(e.target.value)
-                    }
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    {tripType === "oneway"
-                      ? "Pickup Time"
-                      : "Departure Time"}
-                  </label>
-                  <input
-                    type="time"
-                    value={outPickupTime}
-                    onChange={(e) =>
-                      setOutPickupTime(e.target.value)
-                    }
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                </div>
-
-                {tripType === "roundtrip" && (
-                  <>
-                    <div className="md:col-span-2">
-                      <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                        Return Date
-                      </label>
-                      <input
-                        type="date"
-                        value={outReturnDate}
-                        min={minReturnDate}
-                        onChange={(e) =>
-                          setOutReturnDate(e.target.value)
-                        }
-                        className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                        Return Time
-                      </label>
-                      <input
-                        type="time"
-                        value={outReturnTime}
-                        onChange={(e) =>
-                          setOutReturnTime(e.target.value)
-                        }
-                        className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="md:col-span-2 flex mt-2 md:mt-0">
-                  <button
-                    type="submit"
-                    className="w-full md:w-auto md:px-6 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm md:text-base py-3 shadow-[0_10px_30px_rgba(248,113,113,0.7)] hover:from-pink-600 hover:to-red-600 active:scale-[0.98] transition-all"
-                  >
-                    {tripType === "oneway"
-                      ? "SEARCH"
-                      : "SEARCH ROUND TRIP"}
-                  </button>
+              <div className="flex items-start gap-2 rounded-2xl bg-white/5 border border-white/10 px-3 py-2.5 backdrop-blur-md">
+                <span className="text-lg">💳</span>
+                <div>
+                  <div className="font-semibold">Fixed Pricing</div>
+                  <div className="text-slate-200/75">
+                    No hidden charges, GST bill available.
+                  </div>
                 </div>
               </div>
-            )}
+              <div className="flex items-start gap-2 rounded-2xl bg-white/5 border border-white/10 px-3 py-2.5 backdrop-blur-md">
+                <span className="text-lg">🚖</span>
+                <div>
+                  <div className="font-semibold">24×7 Support</div>
+                  <div className="text-slate-200/75">
+                    Day & Night airport and city transfers.
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {/* -------- AIRPORT -------- */}
-            {service === "airport" && (
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-end">
-                {airportMode === "drop" ? (
-                  <>
-                    <div
-                      className="relative md:col-span-4"
-                      ref={pickupListRef}
-                    >
-                      <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                        Pickup Location (India)
-                      </label>
-                      <input
-                        ref={pickupInputRef}
-                        type="text"
-                        value={localPickup}
-                        onChange={(e) => {
-                          setSelectedLocalPlace(null);
-                          setLocalPickup(e.target.value);
-                        }}
-                        placeholder="Home / Hotel / Office..."
-                        className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                      />
-                      {pickupOpen &&
-                        pickupSug.length > 0 && (
-                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50 text-sm">
+            <p className="hidden md:flex items-center gap-2 text-[12px] text-slate-300/90">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-300/70 text-xs">
+                ⓘ
+              </span>
+              Select service type on the right and enter your pickup details to
+              see available cabs.
+            </p>
+          </div>
+
+          {/* RIGHT BOOKING CARD */}
+          <div className="w-full">
+            <div className="bg-gradient-to-tr from-cyan-400/60 via-transparent to-pink-500/70 p-[1.5px] rounded-[32px] shadow-[0_0_45px_rgba(56,189,248,0.65)]">
+              <div className="bg-white/8 backdrop-blur-2xl rounded-[30px] border border-white/15 px-4 py-5 sm:px-6 sm:py-7 md:px-7 md:py-7">
+                {/* top small heading for mobile */}
+                <div className="mb-4 md:mb-5 md:hidden">
+                  <p className="text-[11px] text-sky-200/90 uppercase tracking-[0.18em]">
+                    Professional Car Booking
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold">
+                    {service === "local"
+                      ? "Local City Rentals"
+                      : service === "outstation"
+                      ? "Outstation Cab Booking"
+                      : "Airport Transfer"}
+                  </h2>
+                </div>
+
+                {/* service tabs */}
+                <div className="flex items-center justify-between gap-2 mb-4 overflow-x-auto">
+                  <button
+                    type="button"
+                    onClick={() => handleServiceChange("local")}
+                    className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                      service === "local"
+                        ? "bg-white text-sky-700 shadow-md"
+                        : "bg-white/10 text-white/80 hover:bg-white/20"
+                    }`}
+                  >
+                    🏙 Local Rentals
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleServiceChange("outstation")}
+                    className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                      service === "outstation"
+                        ? "bg-white text-sky-700 shadow-md"
+                        : "bg-white/10 text-white/80 hover:bg-white/20"
+                    }`}
+                  >
+                    🚗 Outstation
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleServiceChange("airport")}
+                    className={`flex-1 whitespace-nowrap px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                      service === "airport"
+                        ? "bg-white text-sky-700 shadow-md"
+                        : "bg-white/10 text-white/80 hover:bg-white/20"
+                    }`}
+                  >
+                    ✈ Airport
+                  </button>
+                </div>
+
+                {/* sub heading + mode toggles */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+                  <h3 className="font-semibold text-lg hidden md:block">
+                    {service === "local"
+                      ? "Local City Rentals"
+                      : service === "outstation"
+                      ? "Outstation Cab Booking"
+                      : "Airport Transfer"}
+                  </h3>
+
+                  <div className="flex flex-wrap justify-start md:justify-end gap-2 text-xs sm:text-sm">
+                    {service === "outstation" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleTripTypeChange("oneway")}
+                          className={`px-3 py-1.5 rounded-full border ${
+                            tripType === "oneway"
+                              ? "bg-sky-500 text-white border-sky-400"
+                              : "bg-white/10 border-white/20 text-white/80"
+                          }`}
+                        >
+                          🚗 One Way
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleTripTypeChange("roundtrip")}
+                          className={`px-3 py-1.5 rounded-full border ${
+                            tripType === "roundtrip"
+                              ? "bg-sky-500 text-white border-sky-400"
+                              : "bg-white/10 border-white/20 text-white/80"
+                          }`}
+                        >
+                          🔄 Round Trip
+                        </button>
+                      </>
+                    )}
+
+                    {service === "airport" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAirportMode("drop");
+                            setSelectedAirportItem(null);
+                            setAirportText("");
+                            setToVal("");
+                            setSelectedToPlace(null);
+                          }}
+                          className={`px-3 py-1.5 rounded-full border ${
+                            airportMode === "drop"
+                              ? "bg-sky-500 text-white border-sky-400"
+                              : "bg-white/10 border-white/20 text-white/80"
+                          }`}
+                        >
+                          🚗 Drop to Airport
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAirportMode("pickup");
+                            setSelectedAirportItem(null);
+                            setAirportText("");
+                            setLocalPickup("");
+                            setSelectedLocalPlace(null);
+                          }}
+                          className={`px-3 py-1.5 rounded-full border ${
+                            airportMode === "pickup"
+                              ? "bg-sky-500 text-white border-sky-400"
+                              : "bg-white/10 border-white/20 text-white/80"
+                          }`}
+                        >
+                          🛬 Pickup from Airport
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* ================= FORM ================= */}
+                <form onSubmit={handleSubmit} className="text-left space-y-4">
+                  {/* Local */}
+                  {service === "local" && (
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="relative" ref={pickupListRef}>
+                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                          📍 Pickup Location (India only)
+                        </label>
+                        <input
+                          ref={pickupInputRef}
+                          type="text"
+                          value={localPickup}
+                          onChange={(e) => {
+                            setSelectedLocalPlace(null);
+                            setLocalPickup(e.target.value);
+                          }}
+                          placeholder="Colaba, Bandra, Andheri..."
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                        />
+                        {pickupOpen && pickupSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
                             {pickupSug.map((sug) => (
                               <li
                                 key={sug.id}
@@ -1466,7 +908,7 @@ export default function Hero({ onSearch = () => {} }) {
                                   e.preventDefault();
                                   pickLocal(sug);
                                 }}
-                                className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                               >
                                 <span className="text-xl flex-shrink-0">
                                   {getPlaceIcon(sug.label)}
@@ -1475,192 +917,420 @@ export default function Hero({ onSearch = () => {} }) {
                                   <div className="text-gray-800 font-medium truncate">
                                     {sug.name || sug.label}
                                   </div>
-                                  <div className="text-[11px] text-gray-500 truncate">
-                                    {sug.city && (
-                                      <span>{sug.city}</span>
-                                    )}
-                                    {sug.state && (
-                                      <span>, {sug.state}</span>
-                                    )}
+                                  <div className="text-xs text-gray-500 truncate">
+                                    {sug.city && <span>{sug.city}</span>}
+                                    {sug.state && <span>, {sug.state}</span>}
                                   </div>
                                 </div>
                               </li>
                             ))}
                           </ul>
                         )}
-                    </div>
+                      </div>
 
-                    <div
-                      className="relative md:col-span-4"
-                      ref={airportListRef}
-                    >
-                      <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                        Drop Airport
-                      </label>
-                      <input
-                        ref={airportInputRef}
-                        type="text"
-                        value={airportText}
-                        onChange={(e) => {
-                          setSelectedAirportItem(null);
-                          setAirportText(e.target.value);
-                        }}
-                        placeholder="Enter airport name or code"
-                        className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                      />
-                      {airportOpen &&
-                        airportSug.length > 0 && (
-                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50 text-sm">
-                            {airportSug.map((sug) => (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                            📦 Package
+                          </label>
+                          <select
+                            value={localPackage}
+                            onChange={(e) => setLocalPackage(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          >
+                            <option value="8x80">8 Hours / 80 Km</option>
+                            <option value="12x120">12 Hours / 120 Km</option>
+                            <option value="full">Full Day / 250 Km</option>
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              📅 Date
+                            </label>
+                            <input
+                              type="date"
+                              value={localDate}
+                              min={todayISO}
+                              onChange={(e) => setLocalDate(e.target.value)}
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              ⏰ Time
+                            </label>
+                            <input
+                              type="time"
+                              value={localTime}
+                              onChange={(e) => setLocalTime(e.target.value)}
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Outstation */}
+                  {service === "outstation" && (
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="relative" ref={fromListRef}>
+                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                          🚗 From City (India)
+                        </label>
+                        <input
+                          ref={fromInputRef}
+                          type="text"
+                          value={fromVal}
+                          onChange={(e) => {
+                            setSelectedFromPlace(null);
+                            setFromVal(e.target.value);
+                          }}
+                          placeholder="Source city"
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                        />
+                        {fromOpen && fromSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                            {fromSug.map((sug) => (
                               <li
                                 key={sug.id}
                                 onMouseDown={(e) => {
                                   e.preventDefault();
-                                  pickAirport(sug);
+                                  pickFrom(sug);
                                 }}
-                                className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                               >
-                                <span className="text-xl">✈</span>
-                                <div className="text-gray-800 font-medium truncate">
+                                <span className="text-xl">🏙</span>
+                                <div className="text-gray-800 font-medium">
                                   {sug.label}
                                 </div>
                               </li>
                             ))}
                           </ul>
                         )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div
-                      className="relative md:col-span-4"
-                      ref={airportListRef}
-                    >
-                      <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                        Pickup Airport
-                      </label>
-                      <input
-                        ref={airportInputRef}
-                        type="text"
-                        value={airportText}
-                        onChange={(e) => {
-                          setSelectedAirportItem(null);
-                          setAirportText(e.target.value);
-                        }}
-                        placeholder="Enter airport name or code"
-                        className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                      />
-                      {airportOpen &&
-                        airportSug.length > 0 && (
-                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50 text-sm">
-                            {airportSug.map((sug) => (
+                      </div>
+
+                      <div className="relative" ref={toListRef}>
+                        <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                          🎯 To City (India)
+                        </label>
+                        <input
+                          ref={toInputRef}
+                          type="text"
+                          value={toVal}
+                          onChange={(e) => {
+                            setSelectedToPlace(null);
+                            setToVal(e.target.value);
+                          }}
+                          placeholder="Destination city"
+                          className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                        />
+                        {toOpen && toSug.length > 0 && (
+                          <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                            {toSug.map((sug) => (
                               <li
                                 key={sug.id}
                                 onMouseDown={(e) => {
                                   e.preventDefault();
-                                  pickAirport(sug);
+                                  pickTo(sug);
                                 }}
-                                className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
                               >
-                                <span className="text-xl">✈</span>
-                                <div className="text-gray-800 font-medium truncate">
+                                <span className="text-xl">🏙</span>
+                                <div className="text-gray-800 font-medium">
                                   {sug.label}
                                 </div>
                               </li>
                             ))}
                           </ul>
                         )}
-                    </div>
+                      </div>
 
-                    <div
-                      className="relative md:col-span-4"
-                      ref={toListRef}
-                    >
-                      <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                        Drop Location (India)
-                      </label>
-                      <input
-                        ref={toInputRef}
-                        type="text"
-                        value={toVal}
-                        onChange={(e) => {
-                          setSelectedToPlace(null);
-                          setToVal(e.target.value);
-                        }}
-                        placeholder="Home / Hotel / Office..."
-                        className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                      />
-                      {toOpen && toSug.length > 0 && (
-                        <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50 text-sm">
-                          {toSug.map((sug) => (
-                            <li
-                              key={sug.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                pickTo(sug);
-                              }}
-                              className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                            >
-                              <span className="text-xl flex-shrink-0">
-                                {getPlaceIcon(sug.label)}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-gray-800 font-medium truncate">
-                                  {sug.name || sug.label}
-                                </div>
-                                <div className="text-[11px] text-gray-500 truncate">
-                                  {sug.city && <span>{sug.city}</span>}
-                                  {sug.state && <span>, {sug.state}</span>}
-                                </div>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                            {tripType === "oneway"
+                              ? "📅 Pickup Date"
+                              : "📅 Departure Date"}
+                          </label>
+                          <input
+                            type="date"
+                            value={outPickupDate}
+                            min={todayISO}
+                            onChange={(e) => setOutPickupDate(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                            {tripType === "oneway"
+                              ? "⏰ Pickup Time"
+                              : "⏰ Departure Time"}
+                          </label>
+                          <input
+                            type="time"
+                            value={outPickupTime}
+                            onChange={(e) => setOutPickupTime(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {tripType === "roundtrip" && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              📅 Return Date
+                            </label>
+                            <input
+                              type="date"
+                              value={outReturnDate}
+                              min={minReturnDate}
+                              onChange={(e) =>
+                                setOutReturnDate(e.target.value)
+                              }
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              ⏰ Return Time
+                            </label>
+                            <input
+                              type="time"
+                              value={outReturnTime}
+                              onChange={(e) => setOutReturnTime(e.target.value)}
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </>
-                )}
+                  )}
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    Pickup Date
-                  </label>
-                  <input
-                    type="date"
-                    value={airportDate}
-                    min={todayISO}
-                    onChange={(e) =>
-                      setAirportDate(e.target.value)
-                    }
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                </div>
+                  {/* Airport */}
+                  {service === "airport" && (
+                    <div className="grid grid-cols-1 gap-4">
+                      {airportMode === "drop" ? (
+                        <>
+                          <div className="relative" ref={pickupListRef}>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              🏠 Pickup Location (India)
+                            </label>
+                            <input
+                              ref={pickupInputRef}
+                              type="text"
+                              value={localPickup}
+                              onChange={(e) => {
+                                setSelectedLocalPlace(null);
+                                setLocalPickup(e.target.value);
+                              }}
+                              placeholder="Home / Hotel / Office..."
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                            {pickupOpen && pickupSug.length > 0 && (
+                              <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                                {pickupSug.map((sug) => (
+                                  <li
+                                    key={sug.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      pickLocal(sug);
+                                    }}
+                                    className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                                  >
+                                    <span className="text-xl flex-shrink-0">
+                                      {getPlaceIcon(sug.label)}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-gray-800 font-medium truncate">
+                                        {sug.name || sug.label}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {sug.city && <span>{sug.city}</span>}
+                                        {sug.state && (
+                                          <span>, {sug.state}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs md:text-sm text-white/75 mb-1.5">
-                    Pickup Time
-                  </label>
-                  <input
-                    type="time"
-                    value={airportTime}
-                    onChange={(e) =>
-                      setAirportTime(e.target.value)
-                    }
-                    className="w-full rounded-xl bg-white text-sm md:text-base text-slate-900 px-3.5 py-2.5 outline-none border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                  />
-                </div>
+                          <div className="relative" ref={airportListRef}>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              ✈ Drop Airport
+                            </label>
+                            <input
+                              ref={airportInputRef}
+                              type="text"
+                              value={airportText}
+                              onChange={(e) => {
+                                setSelectedAirportItem(null);
+                                setAirportText(e.target.value);
+                              }}
+                              placeholder="Enter airport name or code"
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                            {airportOpen && airportSug.length > 0 && (
+                              <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                                {airportSug.map((sug) => (
+                                  <li
+                                    key={sug.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      pickAirport(sug);
+                                    }}
+                                    className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                                  >
+                                    <span className="text-xl">✈</span>
+                                    <div className="text-gray-800 font-medium truncate">
+                                      {sug.label}
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="relative" ref={airportListRef}>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              ✈ Pickup Airport
+                            </label>
+                            <input
+                              ref={airportInputRef}
+                              type="text"
+                              value={airportText}
+                              onChange={(e) => {
+                                setSelectedAirportItem(null);
+                                setAirportText(e.target.value);
+                              }}
+                              placeholder="Enter airport name or code"
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                            {airportOpen && airportSug.length > 0 && (
+                              <ul className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                                {airportSug.map((sug) => (
+                                  <li
+                                    key={sug.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      pickAirport(sug);
+                                    }}
+                                    className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                                  >
+                                    <span className="text-xl">✈</span>
+                                    <div className="text-gray-800 font-medium truncate">
+                                      {sug.label}
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
 
-                <div className="md:col-span-2 flex mt-2 md:mt-0">
-                  <button
-                    type="submit"
-                    className="w-full md:w-auto md:px-6 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm md:text-base py-3 shadow-[0_10px_30px_rgba(248,113,113,0.7)] hover:from-pink-600 hover:to-red-600 active:scale-[0.98] transition-all"
-                  >
-                    SEARCH
-                  </button>
-                </div>
+                          <div className="relative" ref={toListRef}>
+                            <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                              🏠 Drop Location (India)
+                            </label>
+                            <input
+                              ref={toInputRef}
+                              type="text"
+                              value={toVal}
+                              onChange={(e) => {
+                                setSelectedToPlace(null);
+                                setToVal(e.target.value);
+                              }}
+                              placeholder="Home / Hotel / Office..."
+                              className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                            />
+                            {toOpen && toSug.length > 0 && (
+                              <ul className="absolute left-0 right-0 top-full mt-1 max-h-64 overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                                {toSug.map((sug) => (
+                                  <li
+                                    key={sug.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      pickTo(sug);
+                                    }}
+                                    className="cursor-pointer px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors flex items-center gap-3"
+                                  >
+                                    <span className="text-xl flex-shrink-0">
+                                      {getPlaceIcon(sug.label)}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-gray-800 font-medium truncate">
+                                        {sug.name || sug.label}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {sug.city && <span>{sug.city}</span>}
+                                        {sug.state && (
+                                          <span>, {sug.state}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                            📅 Pickup Date
+                          </label>
+                          <input
+                            type="date"
+                            value={airportDate}
+                            min={todayISO}
+                            onChange={(e) => setAirportDate(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs sm:text-sm text-white/80 block mb-1.5">
+                            ⏰ Pickup Time
+                          </label>
+                          <input
+                            type="time"
+                            value={airportTime}
+                            onChange={(e) => setAirportTime(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/95 text-black text-sm border border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CTA button - GREEN */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold text-sm sm:text-base py-3.5 rounded-full shadow-[0_12px_35px_rgba(16,185,129,0.55)] hover:from-emerald-600 hover:to-green-600 transition-transform duration-150 active:scale-[0.98]"
+                    >
+                      {service === "local"
+                        ? "🔍 SEARCH CABS"
+                        : service === "outstation"
+                        ? tripType === "oneway"
+                          ? "🚗 SEARCH ONE WAY CABS"
+                          : "🔄 SEARCH ROUND TRIP CABS"
+                        : "✈ SEARCH AIRPORT CABS"}
+                    </button>
+                  </div>
+                </form>
               </div>
-            )}
-          </form>
+            </div>
+          </div>
+          {/* END RIGHT CARD */}
         </div>
       </div>
     </section>
