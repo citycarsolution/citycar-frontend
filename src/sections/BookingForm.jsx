@@ -1,3 +1,4 @@
+// src/components/BookingForm.jsx
 import React, { useMemo, useState } from "react";
 
 const SERVICES = [
@@ -7,12 +8,19 @@ const SERVICES = [
   { id: "roundtrip", icon: "🔄", label: "Outstation — Round Trip" },
 ];
 
-export default function BookingForm({ selectedCar, searchParams, onBack, onBooked, qrImageUrl }) {
+export default function BookingForm({
+  selectedCar,
+  searchParams,
+  onBack,
+  onBooked,
+  qrImageUrl,
+}) {
   const todayISO = new Date().toISOString().split("T")[0];
   const defaultTime = new Date(Date.now() + 3600000).toTimeString().slice(0, 5);
 
   const initialService = searchParams?.service || "airport";
-  const serviceLabel = SERVICES.find(s => s.id === initialService)?.label || "Service";
+  const serviceLabel =
+    SERVICES.find((s) => s.id === initialService)?.label || "Service";
 
   const carTitleMap = {
     sedan: "Sedan — Dzire/Xcent",
@@ -20,7 +28,17 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
     carens: "SUV — Kia Carens",
     crysta: "SUV — Innova Crysta",
     hycross: "SUV — Innova Hycross",
+    fortuner: "SUV — Fortuner",
   };
+
+  // 👉 amount for UPI
+  const upiAmount = useMemo(() => {
+    const raw = selectedCar?.fare?.total;
+    if (typeof raw === "number" && raw > 0) return Math.round(raw);
+    return 0;
+  }, [selectedCar]);
+
+  const km = selectedCar?.km ?? 0;
 
   const [form, setForm] = useState({
     firstName: "",
@@ -28,7 +46,7 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
     phone: "",
     email: "",
     pickup: searchParams?.pickup?.label || "",
-    drop: (searchParams?.drop?.label || searchParams?.airport?.label || ""),
+    drop: searchParams?.drop?.label || searchParams?.airport?.label || "",
     date: searchParams?.pickupDate || todayISO,
     time: searchParams?.pickupTime || defaultTime,
     payment: "cash",
@@ -39,11 +57,12 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
 
   const onChange = (e) => {
     const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
   const valid = useMemo(() => {
-    const basic = form.firstName && form.phone && form.pickup && form.date && form.time;
+    const basic =
+      form.firstName && form.phone && form.pickup && form.date && form.time;
     return form.payment === "upi" ? basic && form.upiId : basic;
   }, [form]);
 
@@ -56,10 +75,13 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
       serviceLabel,
       carId: selectedCar?.carId,
       carTitle: carTitleMap[selectedCar?.carId] || "—",
-      km: selectedCar?.km ?? 0,
+      km,
       waitMin: selectedCar?.waitMin ?? 0,
       days: selectedCar?.days ?? 1,
-      fareTotal: selectedCar?.fare?.total ? Math.round(selectedCar.fare.total) : undefined,
+      fareTotal:
+        selectedCar?.fare?.total != null
+          ? Math.round(selectedCar.fare.total)
+          : undefined,
     });
   };
 
@@ -68,7 +90,11 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
     return (
       <div className="max-w-sm mx-auto bg-white rounded-xl shadow-lg p-4 text-center">
         {qrImageUrl ? (
-          <img src={qrImageUrl} alt="UPI QR" className="mx-auto w-64 h-64 object-contain rounded-md" />
+          <img
+            src={qrImageUrl}
+            alt="UPI QR"
+            className="mx-auto w-64 h-64 object-contain rounded-md"
+          />
         ) : (
           <div className="mx-auto w-64 h-64 flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-sm text-gray-600">
             <div>
@@ -77,9 +103,17 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
             </div>
           </div>
         )}
+
         <div className="mt-3 text-sm text-gray-700">
           <div className="font-medium">UPI ID</div>
           <div className="mt-1 break-all">{displayUpi}</div>
+
+          {/* 👉 show amount below QR */}
+          {upiAmount > 0 && (
+            <div className="mt-2 text-base font-semibold text-emerald-600">
+              Amount: ₹ {upiAmount.toLocaleString("en-IN")}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -91,17 +125,28 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
         <h2 className="text-lg md:text-xl font-semibold">
           Final Booking — {serviceLabel}
         </h2>
-        <button onClick={onBack} className="text-sm px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200">
+        <button
+          onClick={onBack}
+          className="text-sm px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200"
+        >
           ← Back to Results
         </button>
       </div>
 
       <div className="bg-white border rounded-xl p-4 shadow-sm mb-5 text-sm">
-        <div className="font-medium">Selected Car: {carTitleMap[selectedCar?.carId] || "—"}</div>
+        <div className="font-medium">
+          Selected Car: {carTitleMap[selectedCar?.carId] || "—"}
+        </div>
         <div className="mt-1 text-gray-600">
-          Estimated distance: <b>{selectedCar?.km ?? 0} km</b>
+          Estimated distance: <b>{km} km</b>
           {typeof selectedCar?.fare?.total === "number" && (
-            <> • Estimated fare: <b>₹ {selectedCar.fare.total.toLocaleString("en-IN")}</b></>
+            <>
+              {" "}
+              • Estimated fare:{" "}
+              <b>
+                ₹ {Math.round(selectedCar.fare.total).toLocaleString("en-IN")}
+              </b>
+            </>
           )}
         </div>
       </div>
@@ -112,8 +157,10 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
           <p className="text-xs opacity-90">Fields marked * are required.</p>
         </div>
 
-        <form onSubmit={submit} className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
+        <form
+          onSubmit={submit}
+          className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
+        >
           {/* FIRST NAME */}
           <div>
             <label className="text-sm">First Name *</label>
@@ -221,7 +268,6 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
           <div className="sm:col-span-2">
             <label className="text-sm">Payment Method *</label>
             <div className="mt-2 flex flex-wrap gap-3">
-
               {/* CASH */}
               <label className="flex items-center gap-2 text-sm border rounded-md px-3 py-2 cursor-pointer">
                 <input
@@ -238,7 +284,7 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
               <label
                 className="flex items-center gap-2 text-sm border rounded-md px-3 py-2 cursor-pointer"
                 onClick={() => {
-                  setForm(f => ({ ...f, payment: "upi" }));
+                  setForm((f) => ({ ...f, payment: "upi" }));
                   setTimeout(() => setShowQr(true), 100);
                 }}
               >
@@ -278,7 +324,7 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
                   Show QR
                 </button>
                 <div className="text-sm text-gray-600">
-                  User can scan QR or copy UPI ID to pay.
+                  User can scan QR or open UPI app with amount pre-filled.
                 </div>
               </div>
             </>
@@ -289,26 +335,38 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
             <button
               type="submit"
               disabled={!valid}
-              className={`w-full py-3 rounded-lg text-white font-semibold ${valid ? "" : "opacity-60 cursor-not-allowed"}`}
+              className={`w-full py-3 rounded-lg text-white font-semibold ${
+                valid ? "" : "opacity-60 cursor-not-allowed"
+              }`}
               style={{ backgroundColor: "#E11D48" }}
             >
               Final Booking
             </button>
           </div>
-
         </form>
       </div>
 
       {/* QR MODAL */}
       {showQr && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowQr(false)} />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowQr(false)}
+          />
           <div className="relative z-10 w-full max-w-md">
             <div className="bg-white rounded-xl p-5 shadow-xl">
-              
               <div className="flex items-start justify-between mb-4">
                 <h4 className="font-semibold text-lg">Pay with UPI</h4>
-                <button onClick={() => setShowQr(false)} className="text-gray-500 hover:text-gray-800">✕</button>
+                <button
+                  onClick={() => setShowQr(false)}
+                  className="text-gray-500 hover:text-gray-800"
+                >
+                  ✕
+                </button>
               </div>
 
               <QRCard />
@@ -319,7 +377,9 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
                   onClick={() => {
                     const text = form.upiId || "";
                     if (text) {
-                      navigator.clipboard?.writeText(text).then(() => alert("UPI ID copied to clipboard"));
+                      navigator.clipboard
+                        ?.writeText(text)
+                        .then(() => alert("UPI ID copied to clipboard"));
                     } else {
                       alert("Please enter UPI ID first");
                     }
@@ -333,7 +393,18 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
                   onClick={() => {
                     const upi = form.upiId;
                     if (!upi) return alert("Please enter UPI ID");
-                    const url = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent("Merchant")}&cu=INR`;
+
+                    // 👉 NOTE + AMOUNT for UPI app
+                    const note = `${serviceLabel} | ${
+                      carTitleMap[selectedCar?.carId] || ""
+                    } | ${km}km`;
+
+                    const url = `upi://pay?pa=${encodeURIComponent(
+                      upi
+                    )}&pn=${encodeURIComponent(
+                      "CityCar"
+                    )}&am=${upiAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
+
                     window.location.href = url;
                   }}
                 >
@@ -342,14 +413,13 @@ export default function BookingForm({ selectedCar, searchParams, onBack, onBooke
               </div>
 
               <div className="mt-3 text-xs text-gray-500">
-                Close this dialog after payment and then submit booking.
+                Payment complete hone ke baad ye dialog close karke booking
+                submit kar dijiye.
               </div>
-
             </div>
           </div>
         </div>
       )}
-
     </section>
   );
 }

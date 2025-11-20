@@ -3,28 +3,127 @@ import React, { useEffect, useMemo, useState } from "react";
 
 const PRICE = {
   airport: {
-    sedan: { baseKm: 10, baseFare: 650, extraPerKm: 15, waitFreeMin: 60, waitPerMin: 2 },
-    ertiga: { baseKm: 10, baseFare: 850, extraPerKm: 18, waitFreeMin: 60, waitPerMin: 3 },
-    carens: { baseKm: 10, baseFare: 850, extraPerKm: 20, waitFreeMin: 60, waitPerMin: 3 },
-    crysta: { baseKm: 40, baseFare: 2250, extraPerKm: 22, waitFreeMin: 240, waitPerMin: 5, baseIsHours: true },
+    sedan: {
+      baseKm: 10,
+      baseFare: 650,
+      extraPerKm: 15,
+      waitFreeMin: 60,
+      waitPerMin: 2,
+    },
+    ertiga: {
+      baseKm: 10,
+      baseFare: 850,
+      extraPerKm: 18,
+      waitFreeMin: 60,
+      waitPerMin: 3,
+    },
+    carens: {
+      baseKm: 10,
+      baseFare: 850,
+      extraPerKm: 20,
+      waitFreeMin: 60,
+      waitPerMin: 3,
+    },
+    crysta: {
+      baseKm: 40,
+      baseFare: 2250,
+      extraPerKm: 22,
+      waitFreeMin: 240,
+      waitPerMin: 5,
+      baseIsHours: true,
+    },
     note: "Billing from Pick-up to Pick-up. Toll & parking extra.",
   },
   city: {
     "8x80": {
-      sedan: { baseKm: 80, baseHr: 8, baseFare: 2200, extraPerKm: 13, extraPerHr: 130 },
-      ertiga: { baseKm: 80, baseHr: 8, baseFare: 2700, extraPerKm: 17, extraPerHr: 170 },
-      carens: { baseKm: 80, baseHr: 8, baseFare: 3000, extraPerKm: 18, extraPerHr: 180 },
-      crysta: { baseKm: 80, baseHr: 8, baseFare: 3500, extraPerKm: 22, extraPerHr: 220 },
-      hycross: { baseKm: 80, baseHr: 8, baseFare: 4000, extraPerKm: 30, extraPerHr: 300 },
-      fortuner: { baseKm: 80, baseHr: 8, baseFare: 6500, extraPerKm: 35, extraPerHr: 350, g2g: true },
+      sedan: {
+        baseKm: 80,
+        baseHr: 8,
+        baseFare: 2200,
+        extraPerKm: 13,
+        extraPerHr: 130,
+      },
+      ertiga: {
+        baseKm: 80,
+        baseHr: 8,
+        baseFare: 2700,
+        extraPerKm: 17,
+        extraPerHr: 170,
+      },
+      carens: {
+        baseKm: 80,
+        baseHr: 8,
+        baseFare: 3000,
+        extraPerKm: 18,
+        extraPerHr: 180,
+      },
+      crysta: {
+        baseKm: 80,
+        baseHr: 8,
+        baseFare: 3500,
+        extraPerKm: 22,
+        extraPerHr: 220,
+      },
+      hycross: {
+        baseKm: 80,
+        baseHr: 8,
+        baseFare: 4000,
+        extraPerKm: 30,
+        extraPerHr: 300,
+      },
+      fortuner: {
+        baseKm: 80,
+        baseHr: 8,
+        baseFare: 6500,
+        extraPerKm: 35,
+        extraPerHr: 350,
+        g2g: true,
+      },
     },
     "12x120": {
-      sedan: { baseKm: 120, baseHr: 12, baseFare: 3200, extraPerKm: 13, extraPerHr: 130 },
-      ertiga: { baseKm: 120, baseHr: 12, baseFare: 4000, extraPerKm: 17, extraPerHr: 170 },
-      carens: { baseKm: 120, baseHr: 12, baseFare: 4400, extraPerKm: 18, extraPerHr: 180 },
-      crysta: { baseKm: 120, baseHr: 12, baseFare: 5200, extraPerKm: 22, extraPerHr: 220 },
-      hycross: { baseKm: 120, baseHr: 12, baseFare: 6400, extraPerKm: 30, extraPerHr: 300 },
-      fortuner: { baseKm: 120, baseHr: 12, baseFare: 9300, extraPerKm: 35, extraPerHr: 350, g2g: true },
+      sedan: {
+        baseKm: 120,
+        baseHr: 12,
+        baseFare: 3200,
+        extraPerKm: 13,
+        extraPerHr: 130,
+      },
+      ertiga: {
+        baseKm: 120,
+        baseHr: 12,
+        baseFare: 4000,
+        extraPerKm: 17,
+        extraPerHr: 170,
+      },
+      carens: {
+        baseKm: 120,
+        baseHr: 12,
+        baseFare: 4400,
+        extraPerKm: 18,
+        extraPerHr: 180,
+      },
+      crysta: {
+        baseKm: 120,
+        baseHr: 12,
+        baseFare: 5200,
+        extraPerKm: 22,
+        extraPerHr: 220,
+      },
+      hycross: {
+        baseKm: 120,
+        baseHr: 12,
+        baseFare: 6400,
+        extraPerKm: 30,
+        extraPerHr: 300,
+      },
+      fortuner: {
+        baseKm: 120,
+        baseHr: 12,
+        baseFare: 9300,
+        extraPerKm: 35,
+        extraPerHr: 350,
+        g2g: true,
+      },
     },
     driverAllowanceAfterMidnight: 300,
   },
@@ -42,26 +141,66 @@ const PRICE = {
 };
 
 const CARS = [
-  { id: "sedan", title: "Sedan — Dzire / Xcent", seats: "4 + 1", img: "/cars/sedan.png", description: "AC Col 14 - 1" },
-  { id: "ertiga", title: "SUV — Ertiga / Enjoy", seats: "5 + 1", img: "/cars/ertiga.jpg", description: "AC Col 15 - 1" },
-  { id: "carens", title: "SUV — Kia Carens", seats: "5 + 1", img: "/cars/carens.jpg", description: "AC Col 15 - 1" },
-  { id: "crysta", title: "SUV — Innova Crysta", seats: "5 + 1", img: "/cars/crysta.jpg", description: "Premium SUV" },
-  { id: "hycross", title: "SUV — Innova Hycross", seats: "5 + 1", img: "/cars/hycross.jpg", description: "Premium SUV" },
-  { id: "fortuner", title: "SUV — Fortuner", seats: "5 + 1", img: "/cars/Fortuner.jpg", description: "Luxury SUV" },
+  {
+    id: "sedan",
+    title: "Sedan — Dzire / Xcent",
+    seats: "4 + 1",
+    img: "/cars/sedan.png",
+    description: "AC Col 14 - 1",
+  },
+  {
+    id: "ertiga",
+    title: "SUV — Ertiga / Enjoy",
+    seats: "5 + 1",
+    img: "/cars/ertiga.jpg",
+    description: "AC Col 15 - 1",
+  },
+  {
+    id: "carens",
+    title: "SUV — Kia Carens",
+    seats: "5 + 1",
+    img: "/cars/carens.jpg",
+    description: "AC Col 15 - 1",
+  },
+  {
+    id: "crysta",
+    title: "SUV — Innova Crysta",
+    seats: "5 + 1",
+    img: "/cars/crysta.jpg",
+    description: "Premium SUV",
+  },
+  {
+    id: "hycross",
+    title: "SUV — Innova Hycross",
+    seats: "5 + 1",
+    img: "/cars/hycross.jpg",
+    description: "Premium SUV",
+  },
+  {
+    id: "fortuner",
+    title: "SUV — Fortuner",
+    seats: "5 + 1",
+    img: "/cars/Fortuner.jpg",
+    description: "Luxury SUV",
+  },
 ];
 
-const premium = (id) => id === "crysta" || id === "hycross" || id === "fortuner";
+const premium = (id) =>
+  id === "crysta" || id === "hycross" || id === "fortuner";
 const toFixedMoney = (n) => n.toLocaleString("en-IN");
 
 /* helpers */
 function haversineKm(a, b) {
   if (!a?.lat || !a?.lon || !b?.lat || !b?.lon) return null;
-  const R = 6371, d2r = Math.PI / 180;
+  const R = 6371,
+    d2r = Math.PI / 180;
   const dLat = (b.lat - a.lat) * d2r;
   const dLon = (b.lon - a.lon) * d2r;
   const s =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(a.lat * d2r) * Math.cos(b.lat * d2r) * Math.sin(dLon / 2) ** 2;
+    Math.cos(a.lat * d2r) *
+      Math.cos(b.lat * d2r) *
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s)));
 }
 function dynamicRoadMultiplier(airKm) {
@@ -319,8 +458,8 @@ export default function Results({
 
   return (
     <div className="min-h-screen w-full flex justify-center bg-slate-100 py-4">
-      {/* phone body */}
-      <section className="w-full max-w-md bg-white rounded-3xl shadow-xl px-3 sm:px-4 py-4 sm:py-5">
+      {/* main results card – desktop ~65% width, mobile full */}
+      <section className="w-full max-w-3xl lg:max-w-4xl lg:w-[65%] bg-white rounded-3xl shadow-xl px-3 sm:px-4 py-4 sm:py-5">
         {/* top bar */}
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
@@ -347,9 +486,10 @@ export default function Results({
           </button>
         </div>
 
-        {/* controls – always mobile style */}
-        <div className="mt-4 grid grid-cols-1 gap-3">
-          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
+        {/* controls – 2 column always for first two, Notes full width */}
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {/* Estimated distance */}
+          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-sm">
             <label className="text-[11px] font-medium text-gray-600">
               Estimated distance (km)
             </label>
@@ -369,7 +509,8 @@ export default function Results({
             </p>
           </div>
 
-          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
+          {/* Arrival delay */}
+          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-sm">
             <label className="text-[11px] font-medium text-gray-600">
               Arrival delay (minutes)
             </label>
@@ -404,7 +545,8 @@ export default function Results({
             </p>
           </div>
 
-          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
+          {/* Notes – full width below */}
+          <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-sm col-span-2">
             <label className="text-[11px] font-medium text-gray-600">
               Notes
             </label>
@@ -529,7 +671,7 @@ export default function Results({
                 </div>
 
                 {isOpen && (
-                  <div className="px-3 pb-3 text-[12px] text-gray-700 border-top bg-slate-50 border-t">
+                  <div className="px-3 pb-3 text-[12px] text-gray-700 bg-slate-50 border-t">
                     <div className="py-2">
                       {service === "airport" && (
                         <>

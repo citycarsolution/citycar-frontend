@@ -3,9 +3,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  base: "/",   // <-- THIS IS IMPORTANT FOR NETLIFY
   server: {
     hmr: {
-      overlay: false // temporarily disable to avoid the overlay
+      overlay: false
     }
   }
 })
